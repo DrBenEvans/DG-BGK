@@ -1,7 +1,14 @@
 rm *.o
+mpif90 -fc=ifort -heap-arrays -O2 -c *.f90 
+mpif90 -fc=ifort -heap-arrays -O2 -o BGK  *.o
+
+#mpif90 -fc=ifort -g -O0 -c *.f90
+#mpif90 -fc=ifort -g -O0 -o BGK  *.o
+
+
+# NOT USED OPTIONS AFTER THIS LINE
 #ifort -I$MPI_HOME/include -O2 -c *.f90
 #ifort -O2 -o BGK  *.o -L$MPI_HOME/lib -L$MYRINET_HOME/lib64 -lmpich -lmyriexpress
-mpif90 -O2 -c *.f90
-mpif90 -O2 -o BGK  *.o
+
 #ifort -I$MPI_HOME/include -g -c *.f90
 #ifort -g -o BOLTZMANN  *.o -L$MPI_HOME/lib -L$MYRINET_HOME/lib64 -lmpich -lmyriexpress
