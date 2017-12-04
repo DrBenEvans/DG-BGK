@@ -1,0 +1,7 @@
+rm *.o
+#ifort -I$MPI_HOME/include -O2 -c *.f90
+#ifort -O2 -o BGK  *.o -L$MPI_HOME/lib -L$MYRINET_HOME/lib64 -lmpich -lmyriexpress
+mpif90 -O2 -c *.f90
+mpif90 -O2 -o BGK  *.o
+#ifort -I$MPI_HOME/include -g -c *.f90
+#ifort -g -o BOLTZMANN  *.o -L$MPI_HOME/lib -L$MYRINET_HOME/lib64 -lmpich -lmyriexpress
