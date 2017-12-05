@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from sys import argv, exit
-import math
+from math import fabs
 
 def to_number(s):
     try:
@@ -29,6 +29,11 @@ l2_difference = 0
 l1_difference = 0
 sup_difference = 0
 
+l2r_difference = 0
+l1r_difference = 0
+supr_difference = 0
+
+
 
 for line1, line2 in zip(line1s,line2s):
     f1s = line1.split()
@@ -43,14 +48,27 @@ for line1, line2 in zip(line1s,line2s):
     if len(f1sn) != 0:
         for f1n, f2n in zip(f1sn,f2sn):
             l2_difference += (f1n - f2n)**2
-            l1_difference += math.fabs(f1n - f2n)
-            difference = math.fabs(f1n - f2n)
+            l1_difference += fabs(f1n - f2n)
+            difference = fabs(f1n - f2n)
             if difference > sup_difference :
                 sup_difference = difference
+            denominator = max(fabs(f1n),fabs(f2n)) 
+            if denominator > 0 :
+                l2r_difference += ((f1n - f2n)/denominator)**2
+                l1r_difference += fabs((f1n - f2n)/denominator)
+                rdifference = fabs((f1n - f2n)/denominator)
+                if rdifference > supr_difference :
+                    supr_difference = rdifference
+     
     
 print "l2: ", l2_difference
 print "l1: ", l1_difference
 print "sup: ", sup_difference
+
+print "relative l2: ", l2r_difference
+print "relative l1: ", l1r_difference
+print "relative sup: ", supr_difference
+
 
 
 
