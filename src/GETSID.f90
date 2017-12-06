@@ -12,7 +12,7 @@
 ! ** FILL IN LHOWM : NR. OF ELEMENTS PER NODE ! How many lines 
 ! 
       DO 1490 IP=1,NPOIN 
-      LHOWM(IP)=0 ! Zero 
+      LHOWM(IP)=0 ! Zero ! thank you for this very informative comment
  1490 CONTINUE 
 !                       
       DO 1501 IE=1,NELEM        
@@ -74,7 +74,7 @@
       DO 3091 IN=1,3 
       IN1=IN 
       IPT=INTMA(IN,IE) 
-      IF(IPT.EQ.IP) GOTO 3092 
+      IF(IPT.EQ.IP) GOTO 3092 ! "break" 
  3091 CONTINUE 
  3092 CONTINUE 
 ! 
@@ -86,12 +86,12 @@
 ! 
 ! ** CHECK THE SIDE ----->  NEW OR OLD 
 ! 
-      IF(ILOCA.EQ.ILOC1) GOTO 7304 
+      IF(ILOCA.NE.ILOC1) THEN
       DO 5600 IS=ILOC1+1,ILOCA 
       JLOCA=IS 
       IF(ISIDE(2,IS).EQ.IP2) GOTO 7303 
  5600 CONTINUE 
- 7304 CONTINUE 
+      ENDIF
 ! 
 ! ** NEW SIDE 
 ! 
