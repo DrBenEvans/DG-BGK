@@ -272,7 +272,8 @@
         READ(14,*) NELEM,NPOIN,NBOUN 
         WRITE(15,5)NELEM,NPOIN,NBOUN  
 ! *** SET VALUE OF MXSID 
-        mxsid=2*(NELEM+NBOUN) 
+        mxsid=2*(NELEM+NBOUN) ! (3*NELEM+NBOUN)/2 IS ENOUGH,
+                              ! YOU MUPPET
 ! 
 ! *** WRITE V-SPACE INFO TO OUTPUT FILE 
 !      

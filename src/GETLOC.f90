@@ -44,7 +44,7 @@
       REAL COO,CX,CY
       INTEGER jason, jason1
 !
-      IF(RANKno.EQ.0)THEN
+      IF(RANKno.EQ.0)THEN ! vnsdsjkdkja
       DO 10001 IG=1,NGRPS
 !
 ! *** NELEM_G IS THE NUMBER OF ELEMENTS IN GROUP OF ELEMENTS IG
@@ -57,7 +57,7 @@
       CALL IFILLM(INTMA_PP,NNODE,NELEM_G,CO)
       CALL IFILLV(IPCOM_PP,maxNPOIN_pp,CO)
 !
-      FLAG=1
+      FLAG=1 ! local point index
       I=0
 !
       DO 1001 IE=1,NELEM_G    !LOOP OVER THE PROCESSOR'S ELEMENTS          
@@ -72,53 +72,57 @@
 !
 ! *** FILL IN IPCOM_PP AND INTMA_PP
 !
+      ! scan the local point array to find IP1 in IPCOM_PP
       DO 1003 IP_PP=1,maxNPOIN_pp
       IP=IPCOM_PP(IP_PP)
-      IF(IP.EQ.IP1)THEN
-      INTMA_PP(1,IEG)=IP_PP
+      IF(IP.EQ.IP1)THEN     ! IP1 found
+      INTMA_PP(1,IEG)=IP_PP 
       GOTO 2000
       ENDIF
- 1003 CONTINUE    
+ 1003 CONTINUE              ! IP1 not found
       INTMA_PP(1,IEG)=FLAG
-      IPCOM_PP(FLAG)=IP1
+      IPCOM_PP(FLAG)=IP1    ! add it to IPCOM_PP
       FLAG=FLAG+1
       IF(FLAG.GT.maxNPOIN_pp)THEN
       WRITE(*,101);WRITE(*,102);STOP
       ENDIF
  2000 CONTINUE
 !
+      ! scan the local point array to find IP2 in IPCOM_PP
       DO 1004 IP_PP=1,maxNPOIN_pp
       IP=IPCOM_PP(IP_PP)
-      IF(IP.EQ.IP2)THEN
+      IF(IP.EQ.IP2)THEN     ! IP2 found
       INTMA_PP(2,IEG)=IP_PP
       GOTO 2001
       ENDIF
- 1004 CONTINUE
+ 1004 CONTINUE              ! IP2 not found
       INTMA_PP(2,IEG)=FLAG
-      IPCOM_PP(FLAG)=IP2
+      IPCOM_PP(FLAG)=IP2    ! add it to IPCOM_PP
       FLAG=FLAG+1
       IF(FLAG.GT.maxNPOIN_pp)THEN
       WRITE(*,101);WRITE(*,102);STOP
       ENDIF
  2001 CONTINUE
 !
+      ! scan the local point array to find IP3 in IPCOM_PP
       DO 1005 IP_PP=1,maxNPOIN_pp
       IP=IPCOM_PP(IP_PP)
-      IF(IP.EQ.IP3)THEN
+      IF(IP.EQ.IP3)THEN      ! IP3 found
       INTMA_PP(3,IEG)=IP_PP
       GOTO 2002
       ENDIF
- 1005 CONTINUE
+ 1005 CONTINUE               ! IP3 not found
       INTMA_PP(3,IEG)=FLAG
-      IPCOM_PP(FLAG)=IP3
+      IPCOM_PP(FLAG)=IP3     ! add it to IPCOM_PP
       FLAG=FLAG+1
       IF(FLAG.GT.maxNPOIN_pp)THEN
       WRITE(*,101);WRITE(*,102);STOP
       ENDIF
  2002 CONTINUE
-      ELSE
-      GOTO 1002
-      ENDIF
+      ELSE ! RELATED TO IF(IG.EQ.IGT)
+      GOTO 1002 ! BASICALLY "CYCLE", USELESS
+      ENDIF! RELATED TO IF(IG.EQ.IGT)
+
 !
 ! *** END LOOP OVER PROCESSOR ELEMENTS
 !
@@ -143,7 +147,7 @@
      &          MPI_COMM_WORLD,MPI_IERR)
 !
 10001 CONTINUE
-      ENDIF       !LINKS WITH IF STATEMENT ON LINE 44
+      ENDIF ! RELATED TO IF(RANKno.EQ.0)  vnsdsjkdkja
 !      CALL MPI_BARRIER(MPI_COMM_WORLD,MPI_IERR)
 !
       IF(RANKno.NE.0)THEN
@@ -168,7 +172,7 @@
           CALL MPI_BARRIER(MPI_COMM_WORLD,MPI_IERR)
 
         COO=0.0
-        IF(RANKno.EQ.0)THEN
+        IF(RANKno.EQ.0)THEN !ccmfcjskha
         DO 10003 IG=1,NGRPS
         NELEM_PP=NEGRP(IG)
             TAG=IG*10
@@ -192,9 +196,9 @@
       CALL MPI_SEND(COORD_PP,SIZE4,MPI_REAL,IG,& 
      &         TAG4,MPI_COMM_WORLD,MPI_IERR )
 10003 CONTINUE
-      ENDIF     !LINKS WITH IF STATEMENT ON LINE 157
+      ENDIF  ! IF(RANKno.EQ.0)THEN !ccmfcjskha
 !
-      IF(RANKno.NE.0)THEN
+      IF(RANKno.NE.0)THEN ! ccmdxkaljfa
       TAG=RANKno*10
       CALL MPI_SEND(IPCOM_PP,maxNPOIN_PP,MPI_INTEGER,&
      &            0,TAG,MPI_COMM_WORLD,MPI_IERR)
@@ -202,11 +206,11 @@
       SIZE4=2*NPOIN_PP
       CALL MPI_RECV(COORD_PP,SIZE4,MPI_REAL,0,& 
      &         TAG4,MPI_COMM_WORLD,MPI_STATUS,MPI_IERR )
-      ENDIF      !LINKS WITH IF STATEMENT ON LINE 177 
+      ENDIF !IF(RANKno.NE.0)THEN ! ccmdxkaljfa
 !
 ! *** NEXT DETERMINE BSIDO_PP AND RSIDO_PP
 !
-        IF(RANKno.EQ.0)THEN     
+        IF(RANKno.EQ.0)THEN  ! diescaa
         DO 10005 IG=1,NGRPS
         NELEM_PP=NEGRP(IG)
       CALL IFILLM(BSIDO_PP,NBNOI,maxNBOUN_PP,CO)
@@ -228,19 +232,19 @@
         WRITE(*,103);WRITE(*,104);STOP
         ENDIF
                     NPOIN_PP=NPGRP(IG)
-        DO I=1,NPOIN_PP
+        DO I=1,NPOIN_PP ! scan for BSIDO(1,IB) om IPCOM_PP
         IPT=IPCOM_PP(I)
         IP=BSIDO(1,IB)
-        IF(IP.EQ.IPT)THEN
+        IF(IP.EQ.IPT)THEN ! found 
         BSIDO_PP(1,FLAG)=I
         GOTO 1030
         ENDIF
         ENDDO
  1030   CONTINUE
-        DO I=1,NPOIN_PP
+        DO I=1,NPOIN_PP  ! scan for BSIDO(1,IB) om IPCOM_PP
         IPT=IPCOM_PP(I)
         IP=BSIDO(2,IB)
-        IF(IP.EQ.IPT)THEN
+        IF(IP.EQ.IPT)THEN ! found
         BSIDO_PP(2,FLAG)=I
         GOTO 1031
         ENDIF
@@ -278,9 +282,9 @@
         CALL MPI_SEND(IBCOM_PP,SIZE8,MPI_INTEGER,IG,&
      &   TAG8,MPI_COMM_WORLD,MPI_IERR)
 10005    CONTINUE
-          ENDIF    !LINKS WITH IF STATEMENT ON LINE 193
+          ENDIF    ! IF(RANKno.EQ.0)THEN  ! diescaa
 !
-       IF(RANKno.NE.0)THEN  
+       IF(RANKno.NE.0)THEN  !dsjkhadfxx
             TAG=RANKno*10
         CALL MPI_SEND(IPCOM_PP,maxNPOIN_PP,MPI_INTEGER,&
      &   0,TAG,MPI_COMM_WORLD,MPI_IERR)
@@ -300,12 +304,12 @@
           SIZE8=maxNBOUN_PP
           CALL MPI_RECV(IBCOM_PP,SIZE8,MPI_INTEGER,0,&
      &     TAG8,MPI_COMM_WORLD,MPI_STATUS,MPI_IERR)
-      ENDIF     !LINKS WITH IF STATEMENT ON LINE 261
+      ENDIF  ! IF(RANKno.NE.0)THEN  !dsjkhadfxx
 !
 ! *** NEXT DETERMINE GEOME_PP,MMAT_PP,CMMAT_PP
 !
        CALL MPI_BARRIER(MPI_COMM_WORLD,MPI_IERR)
-       IF(RANKno.EQ.0)THEN
+       IF(RANKno.EQ.0)THEN ! jdhdcaaaaaa
        DO 10007 IG=1,NGRPS
         NELEM_PP=NEGRP(IG)
 !
@@ -354,9 +358,9 @@
           ENDIF
 !
 10007   CONTINUE
-        ENDIF       !LINKS WITH IF STATEMENT ON LINE 276
+        ENDIF       ! IF(RANKno.EQ.0)THEN ! jdhdcaaaaaa
 !
-       IF(RANKno.NE.0)THEN
+       IF(RANKno.NE.0)THEN !cncsskdjhfsdf
         CALL RFILLM(GEOME_PP,NGEOM,maxNELEM_PP,COO)
         CALL RFILLM(MMAT_PP,NNODE,maxNELEM_PP,COO)
         CALL RFILLA(CMMAT_PP,3,3,maxNELEM_PP,COO)
@@ -376,11 +380,11 @@
      &      TAG10,MPI_COMM_WORLD,MPI_STATUS,MPI_IERR)
          ENDIF
 !
-         ENDIF    !LINKS WITH IF STATEMENT ON LINE 323
+         ENDIF    ! IF(RANKno.NE.0)THEN !cncsskdjhfsdf
 !
 ! *** NEXT DETERMINE ISIDE_PP,NX_PP,NY_PP,EL_PP AND ISCOM_PP
 !
-        IF(RANKno.EQ.0)THEN
+        IF(RANKno.EQ.0)THEN !xvmnsdnmbfa
       DO 10009 IG=1,NGRPS
                 CALL IFILLM(ISIDE_PP,8,maxNSIDE_PP,CO)
                 CALL RFILLV(NX_PP,maxNSIDE_PP,COO)
@@ -658,9 +662,9 @@
      &     TAG18,MPI_COMM_WORLD,MPI_IERR)
 
 10009     CONTINUE
-          ENDIF   !LINKS WITH IF STATEMENT ON LINE 356
+          ENDIF   !IF(RANKno.EQ.0)THEN !xvmnsdnmbfa
 !
-          IF(RANKno.NE.0)THEN
+          IF(RANKno.NE.0)THEN !ddpddpddpd
           TAG=RANKno*10
       CALL MPI_SEND(IPCOM_PP,maxNPOIN_PP,MPI_INTEGER,&
      &     0,TAG,MPI_COMM_WORLD,MPI_IERR)
@@ -696,7 +700,7 @@
     &     TAG17,MPI_COMM_WORLD,MPI_STATUS,MPI_IERR)
     CALL MPI_RECV(NCOMM_PP,SIZE18,MPI_INTEGER,0,&
     &    TAG18,MPI_COMM_WORLD,MPI_STATUS,MPI_IERR)
-      ENDIF !LINKS WITH IF STATEMENT ON LINE 626
+      ENDIF !  IF(RANKno.NE.0)THEN !ddpddpddpd
 !
 ! *** CALL THE ROUTINE FOR CONSTRUCTING THE EDGFLX COMMUNICATION MATRICES
 !
