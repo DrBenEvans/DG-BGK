@@ -35,10 +35,11 @@
           IF(RANK.EQ.IG)THEN
             IEL=ISIDE_PP(3,I)
             IER=ISIDE_PP(4,I)
-            IF((IEL.EQ.-1).OR.(IER.EQ.-1))THEN
+            IF((IEL.EQ.-1).OR.(IER.EQ.-1))THEN ! it's an edge
+                                               ! shared between ranks
               FLAG=FLAG+1
-              OPPRANK=LCOMM_PP(I)
-              GLOBIS=ISCOM_PP(I)
+              OPPRANK=LCOMM_PP(I) ! opposite rank for shared edge
+              GLOBIS=ISCOM_PP(I)  ! global index for shared edge
             ENDIF
          ENDIF
          CALL MPI_BCAST(IEL,1,MPI_INTEGER,IG,MPI_COMM_WORLD,MPI_IERR)
@@ -47,9 +48,10 @@
            CALL MPI_BCAST(OPPRANK,1,MPI_INTEGER,IG,MPI_COMM_WORLD,MPI_IERR)
            CALL MPI_BCAST(GLOBIS,1,MPI_INTEGER,IG,MPI_COMM_WORLD,MPI_IERR)
            IF(RANK.EQ.OPPRANK)THEN
-             DO IST=1,NSIDE_PP
+             DO IST=1,NSIDE_PP   ! search ISCOM_PP for 
+                                 ! global edge
                ISTEST=ISCOM_PP(IST)
-               IF(ISTEST.EQ.GLOBIS)GOTO 999
+               IF(ISTEST.EQ.GLOBIS)GOTO 999 ! found, "EXIT"
              ENDDO
  999 CONTINUE
              TAG=100
@@ -66,11 +68,11 @@
            ENDIF
          ENDIF
       CALL MPI_BARRIER(MPI_COMM_WORLD,MPI_IERR)
- 1100 CONTINUE
+ 1100 CONTINUE ! END LOOP OVER SIDES IN THE GROUP
 !
       CALL MPI_BARRIER(MPI_COMM_WORLD,MPI_IERR)
 !
- 1000 CONTINUE
+ 1000 CONTINUE ! END LOOP OVER GROUPS
 !
        RETURN
        END

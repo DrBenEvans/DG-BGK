@@ -325,15 +325,15 @@
         GEOME_PP(I,IEG)=GEOME(I,IE)
         ENDDO
         IF(IMMAT.EQ.1)THEN
-      DO I=1,NNODE
-      MMAT_PP(I,IEG)=MMAT(I,IE)
-      ENDDO
-      ELSE
-      DO I=1,3
-      DO J=1,3
-      CMMAT_PP(I,J,IEG)=CMMAT(I,J,IE)
-      ENDDO
-      ENDDO
+        DO I=1,NNODE
+         MMAT_PP(I,IEG)=MMAT(I,IE)
+        ENDDO
+        ELSE
+         DO I=1,3
+         DO J=1,3
+          CMMAT_PP(I,J,IEG)=CMMAT(I,J,IE)
+         ENDDO
+        ENDDO
       ENDIF      
       ENDIF
  1008 CONTINUE
@@ -403,7 +403,7 @@
             DO 1009 IS=1,NSIDE
             IEL=ISIDE(3,IS)
             IER=ISIDE(4,IS)
-            IF(IEL.EQ.0)THEN
+            IF(IEL.EQ.0)THEN ! This should not happen...
             RANKL=(-1);GOTO 1100
             ENDIF
             RANKL=ELGRP(IEL,1)
@@ -415,7 +415,7 @@
  1101       CONTINUE
 !
             IF((RANKL.EQ.IG).AND.&
-     &    (RANKR.EQ.IG))THEN    !SIDE IS NOT AT A P-SPACE DOMAIN BOUNDARY
+     &    (RANKR.EQ.IG))THEN!SIDE IS NOT AT A P-SPACE DOMAIN BOUNDARY
             FLAG=FLAG+1
             IF(FLAG.GT.maxNSIDE_PP)THEN
             WRITE(*,105)
