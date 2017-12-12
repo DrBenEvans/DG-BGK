@@ -45,6 +45,7 @@
       DATA MMAT/2.0,1.0,1.0,2.0/ 
       FLAG=0 
       EDGCOUNT = 0
+
       CO=0.0
 
 
@@ -165,7 +166,6 @@
                                                  ! decreased by 1
                IS_OTHER = SDCOM_PP(2,EDGCOUNT)
               
-               
            IF((IEL.EQ.-1).AND.(SCPR.LT.0.0))THEN 
                INLR1 = INR1
                INLR2 = INR2
