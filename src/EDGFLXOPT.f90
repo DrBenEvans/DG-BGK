@@ -34,13 +34,10 @@
       REAL :: SEND_EDGE_DATA(5000)!
       REAL :: RECV_EDGE_DATA(5000)!
       INTEGER :: SEND_EDGE_DATA_IDX(5000)! LOCAL EDGE INDICES ON OPPOSITE RANK    
-      INTEGER :: SEND_EDGE_DATA_CHECK_IDX(5000)! DEBUG
       INTEGER :: RECV_EDGE_DATA_IDX(5000)! LOCAL EDGE INDICES ON CURRENT RANK
-      INTEGER :: RECV_EDGE_DATA_CHECK_IDX(5000)! DEBUG
       INTEGER :: MPI_COMM_SLAVES ! SLAVES COMMUNICATOR
       INTEGER :: COLOR,SLAVERANK 
       INTEGER :: EDGCOUNT
-      INTEGER :: OPPRANK,AGREEMENTS ! DEBUG
 
       DATA MMAT/2.0,1.0,1.0,2.0/ 
       FLAG=0 
@@ -69,6 +66,12 @@
         DO IG=1,NGRPS
             SEND_LENGTHS(IG) = 0
         ENDDO
+        
+        DO OFFSET=1,5000                   !DEBUG
+          SEND_EDGE_DATA_IDX(OFFSET) = 0!DEBUG
+          RECV_EDGE_DATA_IDX(OFFSET) = 0!DEBUG
+        ENDDO!DEBUG
+
    
         ! To create new communicator 
             COLOR = 1
@@ -100,12 +103,12 @@
 ! 
 ! *** SKIP TO SEPARATE SUBROUTINE FOR BOUNDARY EDGES 
 !	 
-           IF(IER.EQ.0)THEN 
+           IF(IER.EQ.0)THEN  ! dlkfsdaklfasklda 
              CALL GETBOU(NBOUN,NBNOR,NELEM,BSIDO,IEL,RSIDO,IP1,& 
      &            RHS,INL1,INL2,UX,UY,ALPHA,ETA,VNPNT,&
      &            IV,DISNF,UMEAN,CINF,rv,RANK,VCORD,RORDER,TORDER&
      &            ,R,M) 
-           ELSEIF((IER.NE.-1).AND.(IEL.NE.-1))THEN 
+           ELSEIF((IER.NE.-1).AND.(IEL.NE.-1))THEN !dlkfsdaklfasklda 
 ! *** FOR INTERNAL SIDES: 
 !  
 ! *** STORE THE UPSTREAM EDGE UNKNOWNS IN UNK1 AND UNK2
@@ -148,10 +151,12 @@
              RHS(1,INL2,IEL)=RHS(1,INL2,IEL)+RHSI(2)  
 ! 
 
-           ELSE
-! *** NOW DEAL WITH PROCESSOR BOUNDARY EDGES HERE!!!!! 
-               IF((IEL.EQ.-1).OR.(IER.EQ.-1)) EDGCOUNT = EDGCOUNT + 1
+           ELSE   !dlkfsdaklfasklda 
 
+
+! *** NOW DEAL WITH PROCESSOR BOUNDARY EDGES HERE!!!!! 
+               EDGCOUNT = EDGCOUNT + 1 ! index for edges on partition border
+               
                IS_PP = SDCOM_PP(1,EDGCOUNT)
                IF(IS_PP.NE.IS) THEN  ! DEBUG
                WRITE(*,*) "Rank, IS_PP != IS", RANK,IS_PP,IS
@@ -215,28 +220,26 @@
                SEND_EDGE_DATA(2*OFFSET+1)=RHSI(1)
                SEND_EDGE_DATA(2*OFFSET+2)=RHSI(2)
                SEND_EDGE_DATA_IDX(OFFSET+1)=FLAG*IS_OTHER ! STORING FLAG IN THIS WAY
-               SEND_EDGE_DATA_CHECK_IDX(OFFSET+1)=IS ! STORING FLAG IN THIS WAY
 
                SEND_LENGTHS(OPPSLAVERANK+1)= &
      &                     SEND_LENGTHS(OPPSLAVERANK+1)+1 ! will be
                                                         ! multiplied by 2 when necessary
 
+!               WRITE(50+RANK,"(A9,3I4.1,I5.1,2ES13.4E2)"),"NEWSEND",&!DEBUG
+!     &                       RANK,RANK,OPPSLAVERANK+1,IS_OTHER,RHSI   !DEBUG !+1 to compare with old
 
-           ENDIF
+           ENDIF !dlkfsdaklfasklda 
+
  1000 CONTINUE ! END OF CYCLE OVER SIDES
      
-     CALL MPI_BARRIER(MPI_COMM_SLAVES,MPI_IERR)
-      WRITE(*,*) "WRITING SEND_LENGTHS"
-      WRITE(*,*) "EDGCOUNT,NCOMM_PP",EDGCOUNT,NCOMM_PP
-      WRITE(*,*) RANK,  SEND_LENGTHS
-      WRITE(*,*) RANK,  SENDRECV_MAX_LENGTHS
-     WRITE(*,*) "GOT HERE"
-     CALL MPI_BARRIER(MPI_COMM_SLAVES,MPI_IERR)
-
       CALL MPI_ALLTOALL(SEND_LENGTHS,1,MPI_INTEGER,&
      &             RECV_LENGTHS,1,MPI_INTEGER,&
      &             MPI_COMM_SLAVES,MPI_IERR)
-
+!      CALL MPI_BARRIER(MPI_COMM_SLAVES,MPI_IERR)! DEBUG
+!      WRITE(*,"(A10,8I5.1)") "NEWSEND", RANK, SEND_LENGTHS !DEBUG
+!      WRITE(*,"(A10,8I5.1)") "NEWRECV", RANK, RECV_LENGTHS !DEBUG
+!      CALL MPI_BARRIER(MPI_COMM_SLAVES,MPI_IERR) !DEBUG
+!
       CALL MPI_ALLTOALLV(SEND_EDGE_DATA,2*SEND_LENGTHS,&
      &      2*SENDRECV_START_OFFSETS,MPI_REAL,&
      &      RECV_EDGE_DATA,2*RECV_LENGTHS,&
@@ -249,13 +252,6 @@
      &      SENDRECV_START_OFFSETS,MPI_INTEGER,&
      &      MPI_COMM_SLAVES,MPI_IERR)
 
-      CALL MPI_ALLTOALLV(SEND_EDGE_DATA_CHECK_IDX,SEND_LENGTHS,&
-     &      SENDRECV_START_OFFSETS,MPI_INTEGER,&
-     &      RECV_EDGE_DATA_CHECK_IDX,RECV_LENGTHS,&
-     &      SENDRECV_START_OFFSETS,MPI_INTEGER,&
-     &      MPI_COMM_SLAVES,MPI_IERR)
-
-      AGREEMENTS=0
       DO IG=1,NGRPS
          DO OFFSET=SENDRECV_START_OFFSETS(IG),&
      &              SENDRECV_START_OFFSETS(IG)+RECV_LENGTHS(IG)-1
@@ -266,44 +262,24 @@
                INLR1 = ISIDE(5,IS) 
                INLR2 = ISIDE(6,IS) 
                FLAG = -1
-            ELSE
+            ELSEIF(RECV_EDGE_DATA_IDX(OFFSET+1).GT.0) THEN 
                ! WE ARE ON THE RIGHT OF THE EDGE
                IELR =  ISIDE(4,IS)
                INLR1 = ISIDE(7,IS) 
                INLR2 = ISIDE(8,IS) 
                FLAG = 1
+            ELSE
+             WRITE(*,*) "THIS SHOULD NOT HAPPEN."
             ENDIF 
             
-            IS_OTHER = RECV_EDGE_DATA_CHECK_IDX(OFFSET+1) ! DEBUG
-            !
-            ! check if IS corresponds to IS_OTHER  ! DEBUG
-            ! 
-            OPPRANK=15555555
-            DO EDGCOUNT=1,NCOMM_PP
-            IF(SDCOM_PP(1,EDGCOUNT).EQ.IS) THEN
-              OPPRANK=SDCOM_PP(3,EDGCOUNT)
-              EXIT
-            ENDIF
-            ENDDO
-            IF((SDCOM_PP(2,EDGCOUNT).NE.IS_OTHER).OR.(OPPRANK.NE.IG))&
-     &      THEN
-            WRITE(*,*)RANK,SDCOM_PP(2,EDGCOUNT),IS_OTHER,OPPRANK,IG,&
-     &       EDGCOUNT,SENDRECV_START_OFFSETS(IG),NCOMM_PP,AGREEMENTS
-            STOP
-            ELSE 
-            AGREEMENTS = AGREEMENTS+1
-            ENDIF
-
             RHSI(1) = RECV_EDGE_DATA(2*OFFSET+1)
             RHSI(2) = RECV_EDGE_DATA(2*OFFSET+2)
              
-            IF(IELR.LT.1) THEN
-            WRITE(*,*) "ERROR: RANK, IELR", RANK, IELR
-            STOP 
-            ENDIF
-
             RHS(1,INLR1,IELR)=RHS(1,INLR1,IELR)-FLAG*RHSI(1)
             RHS(1,INLR2,IELR)=RHS(1,INLR2,IELR)-FLAG*RHSI(2)
+!            WRITE(50+RANK,"(A9,3I4.1,4I5.1,2ES13.4E2)"),"NEWRECV",&!DEBUG
+!     &         RANK,IG,RANK,INLR1,INLR2,IELR,IS,RHSI   !DEBUG !+1 to compare with old
+
 
          ENDDO
       ENDDO

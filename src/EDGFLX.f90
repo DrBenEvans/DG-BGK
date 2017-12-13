@@ -23,7 +23,10 @@
       REAL RHS(1,3,NELEM),RHSI(2),DISNF(3,VNPNT,NELEM) 
       REAL UMEAN(NELEM),EDGUN(2),SCPR,RV,VCORD(3,VNPNT) 
       REAL FLUXN(4),FLUYN(4),ETA(NBOUN),CO,R,M
-! 
+!
+      INTEGER SEND_LENGTHS(NGRPS) !DEBUG-COMPARISONS 
+      INTEGER RECV_LENGTHS(NGRPS) !DEBUG-COMPARISONS 
+  
       DATA MMAT/2.0,1.0,1.0,2.0/ 
       FLAG=0 
       CO=0.0
@@ -113,6 +116,11 @@
 ! 
 ! *** LOOP OVER THE GROUPS 
 !
+       DO IG=1,NGRPS
+           SEND_LENGTHS(IG) = 0
+           RECV_LENGTHS(IG) = 0
+       ENDDO
+ 
        DO 4000 IG=1,NGRPS 
          IF(RANK.EQ.IG)THEN 
 ! 
@@ -180,12 +188,17 @@
      &                         MPI_COMM_WORLD,MPI_IERR)
                CALL MPI_SEND(RHSI,2,MPI_REAL,RANKL,2,&
                                MPI_COMM_WORLD,MPI_IERR)
+               SEND_LENGTHS(RANKL) = SEND_LENGTHS(RANKL) + 1 !DEBUG
+!               WRITE(50+RANK,"(A9,3I4.1,I5.1,2ES13.4E2)"),"OLDSEND",&!DEBUG
+!     &                       RANK,IG,RANKL,ISL,RHSI                 !DEBUG
              ENDIF
              IF(RANK.EQ.RANKL)THEN
                CALL MPI_RECV(ISL,1,MPI_INTEGER,IG,1,&
      &                         MPI_COMM_WORLD,MPI_STATUS,MPI_IERR)
                CALL MPI_RECV(RHSI,2,MPI_REAL,IG,2,&
      &                         MPI_COMM_WORLD,MPI_STATUS,MPI_IERR)
+               RECV_LENGTHS(IG) = RECV_LENGTHS(IG) + 1 !DEBUG
+
 !
 ! *** GET THE RELEVENT DISCONTINUOUS NODE NUMBERS AND ELEMENT NUMBER
 !
@@ -197,6 +210,10 @@
 !
                RHS(1,INL1,IEL)=RHS(1,INL1,IEL)+RHSI(1)
                RHS(1,INL2,IEL)=RHS(1,INL2,IEL)+RHSI(2)
+!               WRITE(50+RANK,"(A9,3I4.1,4I5.1,2ES13.4E2)"),"OLDRECV",&!DEBUG
+!     &                       RANK,IG,RANKL,INL1,INL2,IEL,ISL,RHSI               !DEBUG
+
+
              ENDIF
              CALL MPI_BARRIER(MPI_COMM_WORLD,MPI_IERR)
            ELSEIF((IER.EQ.-1).AND.(SCPR.GT.0.0))THEN
@@ -244,13 +261,19 @@
      &                     MPI_COMM_WORLD,MPI_IERR)
                CALL MPI_SEND(RHSI,2,MPI_REAL,RANKR,2,&
                             MPI_COMM_WORLD,MPI_IERR)
+               SEND_LENGTHS(RANKR) = SEND_LENGTHS(RANKR) + 1 !DEBUG
+!               WRITE(50+RANK,"(A9,3I4.1,I5.1,2ES13.4E2)"),"OLDSEND",&!DEBUG
+!     &                       RANK,IG,RANKR,ISR,RHSI                 !DEBUG
+
              ENDIF
              IF(RANK.EQ.RANKR)THEN
                CALL MPI_RECV(ISR,1,MPI_INTEGER,IG,1,&
      &                      MPI_COMM_WORLD,MPI_STATUS,MPI_IERR)
                CALL MPI_RECV(RHSI,2,MPI_REAL,IG,2,&
      &                         MPI_COMM_WORLD,MPI_STATUS,MPI_IERR)
+               RECV_LENGTHS(IG) = RECV_LENGTHS(IG) + 1 ! DEBUG
 !
+
 ! *** GET THE RELEVENT DISCONTINUOUS NODE NUMBERS AND ELEMENT NUMBER
 !
                IER=ISIDE(4,ISR)
@@ -261,6 +284,10 @@
 !
                RHS(1,INR1,IER)=RHS(1,INR1,IER)-RHSI(1)
                RHS(1,INR2,IER)=RHS(1,INR2,IER)-RHSI(2)
+!               WRITE(50+RANK,"(A9,3I4.1,4I5.1,2ES13.4E2)"),"OLDRECV",&!DEBUG
+!     &                       RANK,IG,RANKR,INR1,INR2,IER,ISR,RHSI               !DEBUG
+
+
              ENDIF
              CALL MPI_BARRIER(MPI_COMM_WORLD,MPI_IERR)
            ENDIF
@@ -268,6 +295,11 @@
  4001 CONTINUE
 !
  4000 CONTINUE
+
+!      CALL MPI_BARRIER(MPI_COMM_WORLD,MPI_IERR)
+!      WRITE(*,"(A10,8I5.1)") "OLDSEND", RANK, SEND_LENGTHS !DEBUG
+!      WRITE(*,"(A10,8I5.1)") "OLDRECV", RANK, RECV_LENGTHS !DEBUG
+!      CALL MPI_BARRIER(MPI_COMM_WORLD,MPI_IERR)
 ! 
 ! *** FORMAT STATEMENTS 
 ! 
