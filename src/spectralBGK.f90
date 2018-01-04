@@ -79,10 +79,19 @@
         INTEGER NLINES,NDIMN,NNODE,NBNOR,NBNOI 
         INTEGER NGEOM,NELEM,NPOIN,NBOUN,MXSID ,IP
         INTEGER ILINE,NTIME,VNPNT,IV,ORDER2,VNPNT2,FORCEOUT
-        INTEGER RORDER,TORDER !THESE ARE THE ORDERS OF THE R AND THETA DISCRETISATIONS RESPECTIVELY IN V-SPACE
+       
+        !THESE ARE THE ORDERS OF THE R AND THETA DISCRETISATIONS RESPECTIVELY 
+        ! (IN V-SPACE)
+        INTEGER RORDER,TORDER 
         INTEGER IMMAT,maxpn_pp,maxbn_pp 
-        INTEGER MPI_RANK,MPI_SIZE,MPI_IERR 
-! 
+        INTEGER MPI_IERR,MPI_RANK
+        ! mpi-stuff for position space partitioning
+        INTEGER MPI_RANK_P,MPI_SIZE_P,MPI_COMM_P,GROUP_P
+        ! mpi-stuff for velocity space partitioning
+        INTEGER MPI_RANK_V,MPI_SIZE_V,MPI_COMM_V,GROUP_V
+
+        INTEGER VNPNT_PART
+!
 ! *** DECLARE REAL VARIABLES 
 ! 
         REAL CINF(4) 
@@ -101,132 +110,159 @@
 ! *** INITIALISE MPI 
 ! 
       CALL MPI_INIT(MPI_IERR) !Initialize the MPI execution environment 
-      CALL MPI_COMM_RANK(MPI_COMM_WORLD,MPI_RANK,MPI_IERR) !Determines the rank of the calling process in the communicator 
-      CALL MPI_COMM_SIZE(MPI_COMM_WORLD,MPI_SIZE,MPI_IERR) !Determines the size of the group associated with the communictor  
+      !Determines the rank of the calling process in the communicator 
+      CALL MPI_COMM_RANK(MPI_COMM_WORLD,MPI_RANK,MPI_IERR) 
+      !Determines the size of the group associated with the communictor  
+      CALL MPI_COMM_SIZE(MPI_COMM_WORLD,MPI_SIZE,MPI_IERR)
 ! 
 ! *** DISPLAY PROGRAM HEADER TO THE SCREEN 
 ! 
-          IF(MPI_RANK.EQ.0)THEN !PROCESSOR 0 ONLY 
-            WRITE(*,*) 
-            WRITE(*,*) 
-            WRITE(*,*)'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%' 
-            WRITE(*,*)'%     2D SPECTRAL BGK BOLTZMANN SOLVER      %' 
-            WRITE(*,*)'%                      USING                %' 
-            WRITE(*,*)'%           DISCONTINUOUS GALERKIN FE       %' 
-            WRITE(*,*)'%          (PARALLEL VERSION)               %' 
-            WRITE(*,*)'%      running on',MPI_SIZE,'procs          %' 
-            WRITE(*,*)'%             written by                    %' 
-            WRITE(*,*)'%               Ben Evans                   %' 
-            WRITE(*,*)'%                                           %' 
-            WRITE(*,*)'% Civil & Computational Engineering Centre  %' 
-            WRITE(*,*)'%         University of Wales, Swansea      %' 
-            WRITE(*,*)'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%' 
-            WRITE(*,*) 
-            WRITE(*,*) 
-            WRITE(*,*) 
+      IF(MPI_RANK.EQ.0)THEN !fkljdfvvvvmffkd 
+        WRITE(*,*) 
+        WRITE(*,*) 
+        WRITE(*,*)'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%' 
+        WRITE(*,*)'%     2D SPECTRAL BGK BOLTZMANN SOLVER      %' 
+        WRITE(*,*)'%                      USING                %' 
+        WRITE(*,*)'%           DISCONTINUOUS GALERKIN FE       %' 
+        WRITE(*,*)'%          (PARALLEL VERSION)               %' 
+        WRITE(*,*)'%      running on',MPI_SIZE,'procs          %' 
+        WRITE(*,*)'%             written by                    %' 
+        WRITE(*,*)'%               Ben Evans                   %' 
+        WRITE(*,*)'%                                           %' 
+        WRITE(*,*)'% Civil & Computational Engineering Centre  %' 
+        WRITE(*,*)'%         University of Wales, Swansea      %' 
+        WRITE(*,*)'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%' 
+        WRITE(*,*) 
+        WRITE(*,*) 
+        WRITE(*,*) 
 ! 
 ! *** OPEN THE CONFIGURATION FILE (filename stored in INPUT FILE) 
 ! 
-            filename='run.inp' 
+        filename='run.inp' 
 ! 
-            OPEN(21,file=filename,status='old')
-            READ(21,*) filename 
-            CLOSE(21)
+        OPEN(21,file=filename,status='old')
+        READ(21,*) filename 
+        CLOSE(21)
 !
-            PRINT*,'CONFIGURATION FILE = ',filename 
-            OPEN (13,file=filename,status='old') 
-            WRITE(*,*)   
+        PRINT*,'CONFIGURATION FILE = ',filename 
+        OPEN (13,file=filename,status='old') 
+        WRITE(*,*)   
 !
 ! *** READ IN ALL THE INPUT VARIABLES AS A NAMELIST FROM THE CONFIGURATION FILE
 !
-            IVD%TORDER = 20
-            IVD%NTIME = 10000
-            IVD%FORCEOUT = 0
-            IVD%IMMAT = 1 
-            IVD%INF = 1
-            IVD%RS = 0
-            IVD%CSAFM = 0.5
-            IVD%rv = 2000
-            IVD%T1 = 293
-            IVD%P1 = 0.1
-            IVD%U0 = 100
-            IVD%V0 = 0.0
-            IVD%W = 1.0
-            IVD%ALPHA = 0.9
-            IVD%R = 287
-            IVD%d = 250e-12
-            IVD%M = 32
-            IVD%CINF(1) = 294 !INFLOW TEMP
-            IVD%CINF(2) = 0.001473 !INFLOW PRESSURE
-            IVD%CINF(3) = 171.85 !INFLOW U-VEL
-            IVD%CINF(4) = 0.0   !INFLOW V-VEL
-            IVD%LobattoFile = 'Lobatto20.txt' !Lobatto Quadrature File
-            IVD%PSpaceFile = 'AEROFOIL.RES' !PSpace Mesh File
-            IVD%OutFile = 'FILE.OUT' !Output File
-            IVD%PartitionFile = 'METIS3WAYPARTAEROFOIL13.RES' !METIS PARTITION FILE
-            IVD%RestartInFile = 'RESTART.RES' !RESTART INPUT FILE
-            IVD%ResidualFile = 'RESIDUAL.RES' !RESIDUAL FILE
-            IVD%ResultsFile1 = 'RESULTS1.RES' !RESULTS FILE 1
-            IVD%ResultsFile2 = 'RESULTS2.RES' !RESULTS FILE 2
-            IVD%RestartOutFile = 'RESTART.RES' !RESTART OUTPUT FILE
-            IVD%GIDMeshFile = 'GIDMESH.RES' !GID MESH FILE
-!
-            READ(13,Input)
-            CLOSE(13)
+        IVD%TORDER = 20
+        IVD%NTIME = 10000
+        IVD%FORCEOUT = 0
+        IVD%IMMAT = 1 
+        IVD%INF = 1
+        IVD%NVSPACEPART = 1
+        IVD%RS = 0
+        IVD%CSAFM = 0.5
+        IVD%rv = 2000
+        IVD%T1 = 293
+        IVD%P1 = 0.1
+        IVD%U0 = 100
+        IVD%V0 = 0.0
+        IVD%W = 1.0
+        IVD%ALPHA = 0.9
+        IVD%R = 287
+        IVD%d = 250e-12
+        IVD%M = 32
+        IVD%CINF(1) = 294 !INFLOW TEMP
+        IVD%CINF(2) = 0.001473 !INFLOW PRESSURE
+        IVD%CINF(3) = 171.85 !INFLOW U-VEL
+        IVD%CINF(4) = 0.0   !INFLOW V-VEL
+        IVD%LobattoFile = 'Lobatto20.txt' !Lobatto Quadrature File
+        IVD%PSpaceFile = 'AEROFOIL.RES' !PSpace Mesh File
+        IVD%OutFile = 'FILE.OUT' !Output File
+        IVD%PartitionFile = 'METIS3WAYPARTAEROFOIL13.RES' !METIS PARTITION FILE
+        IVD%RestartInFile = 'RESTART.RES' !RESTART INPUT FILE
+        IVD%ResidualFile = 'RESIDUAL.RES' !RESIDUAL FILE
+        IVD%ResultsFile1 = 'RESULTS1.RES' !RESULTS FILE 1
+        IVD%ResultsFile2 = 'RESULTS2.RES' !RESULTS FILE 2
+        IVD%RestartOutFile = 'RESTART.RES' !RESTART OUTPUT FILE
+        IVD%GIDMeshFile = 'GIDMESH.RES' !GID MESH FILE
+        READ(13,Input)
+        CLOSE(13)
 ! 
 ! *** OPEN THE LOBATTO WEIGHTINGS FILES 
 ! *** FIRST FOR FULL VMESH INTEGRATION
-            filename = IVD%LobattoFile
-            PRINT*,'READING V-SPACE LOBATTO FILE = ',IVD%LobattoFile
-            OPEN (10, file=filename, status='old') 
-            WRITE(*,*)
+        filename = IVD%LobattoFile
+        PRINT*,'READING V-SPACE LOBATTO FILE = ',IVD%LobattoFile
+        OPEN (10, file=filename, status='old') 
+        WRITE(*,*)
 ! 
 ! *** READ IN THE LOBATTO ORDER 
 !	 
-            READ (10,*) RORDER 
-            TORDER = IVD%TORDER
+        READ (10,*) RORDER 
+        TORDER = IVD%TORDER
+        MPI_SIZE_V = IVD%NVSPACEPART
+        MPI_SIZE_P = MPI_SIZE / MPI_SIZE_V
 ! 
 ! *** CALCULATE THE NUMBER OF NODES IN VSPACE 
 ! 
-            VNPNT=RORDER*TORDER
-            ALLOCATE(VCORD(3,VNPNT))  
+        VNPNT=RORDER*TORDER
+        VNPNT_PART=VNPNT/MPI_SIZE_V
+        ALLOCATE(VCORD(3,VNPNT))  
 ! 
 ! *** CALL VSPACE SUBROUTINE 
 ! 
-            CALL VSPACE(RORDER,TORDER,VNPNT,VCORD,SUMWEIGHT) 
-            rv = IVD%rv
-            FORCEOUT = IVD%FORCEOUT
+        CALL VSPACE(RORDER,TORDER,VNPNT,VCORD,SUMWEIGHT) 
+        rv = IVD%rv
+        FORCEOUT = IVD%FORCEOUT
 ! 
-          ENDIF
+      ENDIF ! IF(MPI_RANK.EQ.0)THEN !fkljdfvvvvmffkd 
 ! 
 ! *** MPI BCASTS 
 ! 
-          CALL MPI_BCAST(VNPNT,1,MPI_INTEGER,0,MPI_COMM_WORLD,MPI_IERR)
-          IF(MPI_RANK.NE.0)THEN
-            ALLOCATE(VCORD(3,VNPNT))
-          ENDIF 
-          CALL MPI_BCAST(rv,1,MPI_REAL,0,MPI_COMM_WORLD,MPI_IERR) 
-          CALL MPI_BCAST(FORCEOUT,1,MPI_INTEGER,0,MPI_COMM_WORLD,MPI_IERR)
-          CALL MPI_BCAST(SUMWEIGHT,1,MPI_REAL,0,MPI_COMM_WORLD,MPI_IERR)
-          CALL MPI_BCAST(RORDER,1,MPI_INTEGER,0,MPI_COMM_WORLD,MPI_IERR)
-          CALL MPI_BCAST(TORDER,1,MPI_INTEGER,0,MPI_COMM_WORLD,MPI_IERR)
-          CALL MPI_BCAST(VCORD,3*VNPNT,MPI_REAL,0,MPI_COMM_WORLD,MPI_IERR)
+      CALL MPI_BCAST(VNPNT,1,MPI_INTEGER,0,MPI_COMM_WORLD,MPI_IERR)
+      CALL MPI_BCAST(VNPNT_PART,1,MPI_INTEGER,0,MPI_COMM_WORLD,MPI_IERR)
+      CALL MPI_BCAST(MPI_SIZE_P,1,MPI_INTEGER,0,MPI_COMM_WORLD,MPI_IERR)
+      CALL MPI_BCAST(MPI_SIZE_V,1,MPI_INTEGER,0,MPI_COMM_WORLD,MPI_IERR)
+      IF(MPI_RANK.NE.0)THEN
+        ALLOCATE(VCORD(3,VNPNT))
+      ENDIF 
+      CALL MPI_BCAST(rv,1,MPI_REAL,0,MPI_COMM_WORLD,MPI_IERR) 
+      CALL MPI_BCAST(FORCEOUT,1,MPI_INTEGER,0,MPI_COMM_WORLD,MPI_IERR)
+      CALL MPI_BCAST(SUMWEIGHT,1,MPI_REAL,0,MPI_COMM_WORLD,MPI_IERR)
+      CALL MPI_BCAST(RORDER,1,MPI_INTEGER,0,MPI_COMM_WORLD,MPI_IERR)
+      CALL MPI_BCAST(TORDER,1,MPI_INTEGER,0,MPI_COMM_WORLD,MPI_IERR)
+      CALL MPI_BCAST(VCORD,3*VNPNT,MPI_REAL,0,MPI_COMM_WORLD,MPI_IERR)
 !
+! *** SPLIT IN VELOCITY SPACE
+!
+
+      GROUP_P = MPI_RANK / MPI_SIZE_P
+      GROUP_V = MPI_RANK - GROUP_P*MPI_SIZE_P
+      
+      CALL MPI_COMM_SPLIT(MPI_COMM_WORLD,GROUP_P,MPI_RANK_P,MPI_COMM_P,&
+     &               MPI_IERR)
+      CALL MPI_COMM_SPLIT(MPI_COMM_WORLD,GROUP_V,MPI_RANK_V,MPI_COMM_V,&
+     &               MPI_IERR)
+
+      WRITE(*,"A5,5I6")"MPI",MPI_RANK,GROUP_V,MPI_RANK_V,&
+     &                          GROUP_P,MPI_RANK_P  
+
 ! *** OPEN PHYSICAL SPACE MESH DATA FILE AND READ GLOBAL PARAMETERS 
 ! 
-      IF(MPI_RANK.EQ.0)THEN  !sdfhasdcabadfadaaa
+      IF(MPI_RANK_P.EQ.0)THEN  !sdfhasdcabadfadaaa
 ! 
 ! *** OPEN THE INPUT FILE ON CHANNEL5 
 ! 
         filename = IVD%PSpaceFile
-        PRINT*,'READING P-SPACE MESH FILE = ',IVD%PSpaceFile 
+        PRINT*,'RANK',MPI_RANK,'READING P-SPACE MESH FILE = ',&
+     &                         IVD%PSpaceFile 
         OPEN  (14, file=filename, status='old')  
         WRITE(*,*) 
 
         WRITE(*,*) 
         filename = IVD%OutFile
-        PRINT*,'OPENDING OUTPUT FILE = ',IVD%OutFile
-        OPEN  (15, file=filename, status='UNKNOWN')    
+
+        IF(MPI_RANK.EQ.0) THEN
+          PRINT*,'OPENDING OUTPUT FILE = ',IVD%OutFile
+          OPEN  (15, file=filename, status='UNKNOWN')    
+        ENDIF
+
         WRITE(*,*) 
         WRITE(*,*) 
 
@@ -244,15 +280,16 @@
 ! 
         DO 400 ILINE=1,NLINES 
           READ(14,*) TEXT 
-          WRITE(15,1)TEXT 
+
+          IF(MPI_RANK.EQ.0) WRITE(15,1)TEXT 
   400   CONTINUE 
 ! 
 ! *** SPECIFY DIMENSION 
 ! 
         READ(14,*) TEXT 
-        WRITE(15,1)TEXT 
+        IF(MPI_RANK.EQ.0) WRITE(15,1)TEXT 
         READ(14,*) NDIMN 
-        WRITE(15,5)NDIMN 
+        IF(MPI_RANK.EQ.0) WRITE(15,5)NDIMN 
 ! 
 ! *** FROM THIS OBTAIN  
 !          NNODE : NR. OF NODES PER ELEMENT 
@@ -269,18 +306,20 @@
 ! *** SPECIFY: NR. OF ELEMENTS , NR. OF NODAL POINTS ,NR. OF BOUNDARY NO 
 ! 
         READ(14,*) TEXT 
-        WRITE(15,1)TEXT 
+        IF(MPI_RANK.EQ.0) WRITE(15,1)TEXT 
         READ(14,*) NELEM,NPOIN,NBOUN 
-        WRITE(15,5)NELEM,NPOIN,NBOUN  
+        IF(MPI_RANK.EQ.0) WRITE(15,5)NELEM,NPOIN,NBOUN  
 ! *** SET VALUE OF MXSID 
         mxsid=2*(NELEM+NBOUN) ! (3*NELEM+NBOUN)/2 IS ENOUGH,
                               ! YOU MUPPET
 ! 
 ! *** WRITE V-SPACE INFO TO OUTPUT FILE 
-!      
-        WRITE(15,170) 
-        WRITE(15,180) 
-        WRITE(15,5) RORDER,TORDER,VNPNT 
+!       
+        IF(MPI_RANK.EQ.0)THEN
+          WRITE(15,170) 
+          WRITE(15,180) 
+          WRITE(15,5) RORDER,TORDER,VNPNT 
+        ENDIF
 ! 
 ! *** ALLOCATE DIMENSIONS TO ARRAYS 
 ! 
@@ -293,14 +332,14 @@
         CALL GTINPT( NDIMN ,NNODE ,NPOIN ,NELEM ,& 
      &                  NBOUN ,INTMA ,COORD , BSIDO ,& 
      &                  IELSI , NBNOI) 
-      ENDIF ! IF(MPI_RANK.EQ.0)THEN  !sdfhasdcabadfadaaa
+      ENDIF ! IF(MPI_RANK_P.EQ.0)THEN  !sdfhasdcabadfadaaa
 ! 
 ! *** BROADCAST THE RELEVANT P-SPACE DATA TO THE SLAVE PROCESSORS 
 ! 
        CALL BCASTP(NDIMN,NNODE,NBNOR,NBNOI,NGEOM,CSAFM,& 
-     &    IMMAT,ALPHA,NELEM,NPOIN,NBOUN,MXSID,d,R,M) 
+     &    IMMAT,ALPHA,NELEM,NPOIN,NBOUN,MXSID,d,R,M,MPI_COMM_P) 
 !
-      IF(MPI_RANK.NE.0)THEN
+      IF(MPI_RANK_P.NE.0)THEN
         ALLOCATE (INTMA(3,NELEM),BSIDO(NBNOI,NBOUN),IELSI(2,NELEM)) 
         ALLOCATE (COORD(2,NPOIN),RHO(NPOIN)) 
         ALLOCATE (UVEL(NPOIN),VVEL(NPOIN),PS(NPOIN),TEMP(NPOIN)) 
@@ -308,29 +347,30 @@
 ! 
 ! *** TELL THE USER WHETHER THE CODE IS USING LUMPER OR CONSISTENT MMAT 
 ! 
-       IF(MPI_RANK.EQ.0)THEN 
-         IF(IMMAT.EQ.0)THEN 
-          PRINT*,'NOTE: YOU HAVE CHOSEN TO USE CONSISTENT MASS MATRICES' 
-         ELSE 
-           PRINT*,'NOTE: YOU HAVE CHOSEN TO USE LUMPED MASS MATRICES' 
-         ENDIF 
-         WRITE(*,*) 
-         WRITE(*,*) 
+       IF(MPI_RANK_P.EQ.0)THEN ! dfldafalkjccddk
 ! 
 ! *** INITIALISE RHO(NPOIN),UVEL(NPOIN),VVEL(NPOIN),TEMP(NPOINT),PS(NPOIN) 
-! 
 ! 
          CALL RFILLV(RHO,NPOIN,0.0) 
          CALL RFILLV(UVEL,NPOIN,0.0) 
          CALL RFILLV(VVEL,NPOIN,0.0) 
          CALL RFILLV(TEMP,NPOIN,0.0) 
          CALL RFILLV(PS,NPOIN,0.0)   
-! 
-! *** CLOSE CHANNELS 14 and 15
-! 
          CLOSE(14) 
-         CLOSE(15) 
-       ENDIF  
+
+         IF(MPI_RANK.EQ.0)THEN ! dcfsdaovvvvv
+           IF(IMMAT.EQ.0)THEN 
+            PRINT*,&
+     &          'NOTE: YOU HAVE CHOSEN TO USE CONSISTENT MASS MATRICES' 
+           ELSE 
+             PRINT*,'NOTE: YOU HAVE CHOSEN TO USE LUMPED MASS MATRICES' 
+           ENDIF 
+           WRITE(*,*) 
+           WRITE(*,*) 
+           CLOSE(15) 
+         ENDIF  ! IF(MPI_RANK.EQ.0)THEN ! dcfsdaovvvvv
+       ENDIF  !  IF(MPI_RANK_P.EQ.0)THEN ! dfldafalkjccddk
+
 ! 
 ! *** CALL DG_LIN_CONVEC FOR THE DISTRIBUTION FUNCTION CONVECTION PROCESS 
 ! *** (CALLED BY ALL PROCESSORS RANK 0 -> MPI_SIZE-1) 
@@ -342,7 +382,9 @@
      &                  VNPNT,SUMWEIGHT,VCORD,& 
      &                  rv,RHO,UVEL,VVEL,& 
      &                  PS,TEMP,ALPHA,CINF,MXSID,MPI_RANK,& 
-     &                  MPI_SIZE,IVD,FORCEOUT,d,R,M) 
+     &                  MPI_SIZE,IVD,FORCEOUT,d,R,M,&
+     &                  MPI_RANK_P,MPI_SIZE_P,MPI_COMM_P,&
+     &                  MPI_RANK_V,MPI_SIZE_V,MPI_COMM_V) 
 ! 
 ! *** END OF PROGRAM 
 ! 
