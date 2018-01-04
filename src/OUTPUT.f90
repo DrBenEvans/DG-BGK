@@ -12,6 +12,7 @@
           INTEGER :: IMMAT !Lumped mass matrices (no/yes)
           INTEGER :: RS !Using Restart data (no/yes)
           INTEGER :: INF !Is there an inflow (no/yes)
+          INTEGER :: NVSPACEPART ! number of VSPACE partitions
           REAL :: CSAFM !Safety factor applied to timestep (Courant)
           REAL :: rv !Radial extent of the V-SPACE
           REAL :: T1 !Initial condition temp
