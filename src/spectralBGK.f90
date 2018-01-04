@@ -71,7 +71,7 @@
         REAL, ALLOCATABLE :: VVEL(:) 
         REAL, ALLOCATABLE :: PS(:) 
         REAL, ALLOCATABLE :: TEMP(:) 
-	REAL, ALLOCATABLE :: VCORD(:,:) 
+        REAL, ALLOCATABLE :: VCORD(:,:) 
 ! 
 ! *** DECLARE INTEGER VARIABLES 
 ! 
@@ -84,7 +84,7 @@
 ! 
 ! *** DECLARE REAL VARIABLES 
 ! 
-	REAL CINF(4) 
+        REAL CINF(4) 
         REAL CSAFM, rv,ALPHA,SUMWEIGHT 
         REAL d,R,M
 ! 
@@ -213,7 +213,7 @@
 !
 ! *** OPEN PHYSICAL SPACE MESH DATA FILE AND READ GLOBAL PARAMETERS 
 ! 
-      IF(MPI_RANK.EQ.0)THEN 
+      IF(MPI_RANK.EQ.0)THEN  !sdfhasdcabadfadaaa
 ! 
 ! *** OPEN THE INPUT FILE ON CHANNEL5 
 ! 
@@ -292,7 +292,7 @@
         CALL GTINPT( NDIMN ,NNODE ,NPOIN ,NELEM ,& 
      &                  NBOUN ,INTMA ,COORD , BSIDO ,& 
      &                  IELSI , NBNOI) 
-      ENDIF 
+      ENDIF ! IF(MPI_RANK.EQ.0)THEN  !sdfhasdcabadfadaaa
 ! 
 ! *** BROADCAST THE RELEVANT P-SPACE DATA TO THE SLAVE PROCESSORS 
 ! 
