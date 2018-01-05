@@ -120,21 +120,41 @@ direction of the edge.
 In what follows, the words *rank*, *partition*, *process* and *group* might be 
 used interchangeably depending on my current mood. Their real meaning is of
 course tightly connected.
-## Variables computed on the master rank 
+## Variables computed by master and communicated to slaves (not specific to each slave)
 
 * **NGRPS**: Number of slaves (groups of points).
 
 * **ELGRP(NELEM,2)**: A dictionary for element indices between master and slaves.
+   It is computed in the [PTMESH](../src/PTMESH.f90)
+   subroutine on the master rank and broadcast to slaves.
     1. Partition (group) the element belongs to.
     2. Index IEG of the element in its partition ( 1 <= IEG <= NELEM_PP )
 
 * **NEGRP(NGRPS)**: Number of elements in each partition (group). Each nuber in
   this array is sent to the respective rank as NELEM_PP.
 * **GCOMM(NGRPS,NGRPS)**: Symmetric matrix that contains the count of the edges
-  shared between two partitions (groups). Note: GCOMM(i,i) = 0.
+  shared between two partitions (groups). Note: GCOMM(i,i) = 0. As for ELGRP,
+this is computed by the master rank in the [PTMESH](../src/PTMESH.f90) routine 
+and broadcasted.
 
-## Variables computed by master and communicated to slaves
-Notes:
+About MPI-related stuff (see also [mpi_structure.md](mpi_structure.md)):
+
+* **MPI_COMM_P**: MPI communicator which is common to all the processes sharing
+  the same portion velocity space (P-space-spanning communicator).
+* **MPI_RANK_P**: rank number for the current process associated to the 
+MPI_COMM_P communicator.
+* **MPI_SIZE_P**: Number of ranks in each P-space-spanning communicator.
+
+* **MPI_COMM_V**: MPI communicator which is common to all the processes sharing
+  the same portion of position space (V_space-spanning communicator).
+* **MPI_RANK_V**: rank number for the current process associated to the 
+MPI_COMM_V communicator.
+* **MPI_SIZE_V**: Number of ranks in each V-space-spanning communicator.
+
+
+## Variables computed by master and communicated to slaves (specific to each slave)
+Usually the variables which end with "**_PP**" fall in this cathegory. 
+Some notes:
 * The useful part of arrays declared with a lenght of maxNPOIN_PP is only 
 NPOIN_PP-big.
 * The useful part of arrays declared with a lenght of maxNELEM_PP is only 
@@ -189,6 +209,10 @@ ELGRP(...,2), and the 5,6,7,8 indices are copied as they are.
   edge *i* is shared, LCOMM_PP(i) is equal to the other rank that shares the
 edge, otherwise (that is, in the case of an internal edge) it is equal to zero.
 
+* **DISNF_PP(NNODE,VNPNT_PART*MPI_RANK_V+1:VNPNT_PART*(MPI_RANK_V+1),maxNELEM_PP)**:
+    The density function discretized in position and velocity space. In order
+to implement velocity space partitioning, the second index is chosen to go from
+VNPNT_PART*MPI_RANK_V+1 to VNPNT_PART*(MPI_RANK_V+1). 
 
 
 

@@ -1,6 +1,9 @@
         SUBROUTINE INICON2(NPOIN,NNODE,NELEM,NELEM_PP,INTMA_PP,& 
-     &    ELGRP,NPOIN_PP,VNPNT,VCORD,DISNF_PP,IPCOM_PP,RANK,CINF,rv,IVD&
-     &    ,GC,M) 
+     &    ELGRP,NPOIN_PP,VNPNT,VCORD,DISNF_PP,IPCOM_PP,CINF,rv,IVD&
+     &    ,GC,M,&
+     &                 MPI_RANK_P,MPI_SIZE_P,MPI_COMM_P,&
+     &                 MPI_RANK_V,MPI_SIZE_V,MPI_COMM_V,&
+     &                 VSPACE_FIRST,VSPACE_LAST) 
 !
 ! *** THIS SUBROUTINE ESTABLISHES THE INITIAL CONDITIONS OF THE PROBLEM 
 !
@@ -45,10 +48,18 @@
 !
       TYPE(InputVariables) :: IVD
       INTEGER IN,INV,RS,IV,IP,I,NELEM,INTMA_PP(NNODE,NELEM_PP) 
-      INTEGER VNPNT,NPOIN,NPOIN_PP,NNODE,RANK,nrank,TAG,NELEM_PP 
+      INTEGER VNPNT,NPOIN,NPOIN_PP,NNODE,TAG,NELEM_PP 
       INTEGER TEST1,TEST2,IPCOM_PP(NPOIN_PP),IP_PP,IE_PP,IE,IPT 
       INTEGER ELGRP(NELEM,2),MPI_IERR,MPI_STATUS 
-!
+      ! mpi-stuff for position space partitioning
+      INTEGER MPI_RANK_P,MPI_SIZE_P,MPI_COMM_P,GROUP_P
+      ! mpi-stuff for velocity space partitioning
+      INTEGER MPI_RANK_V,MPI_SIZE_V,MPI_COMM_V,GROUP_V
+      INTEGER VSPACE_FIRST,VSPACE_LAST
+      INTEGER NRANK_P
+
+
+
       REAL VCORD(3,VNPNT) 
       REAL T1,P1,RHO1,n1,NA 
       REAL M,BETA1,TMP1,U0 ,V0
@@ -56,7 +67,8 @@
       REAL SUM,ETA,ZETA,R,THETA,rv,GC 
       REAL CINF(4) 
 !
-      REAL DISNF_PP(NNODE,VNPNT,NELEM_PP),DISNFPARCEL(NNODE) 
+      REAL DISNF_PP(NNODE,VSPACE_FIRST:VSPACE_LAST,NELEM_PP)
+      REAL DISNFPARCEL(NNODE) 
  
 !
       CHARACTER filename*80,TEXT*80 
@@ -67,148 +79,147 @@
 !
 ! *** INITIALISE DISNF_PP 
 !
-      CO=0.0 
-      IF(RANK.NE.0)THEN 
-        CALL RFILLA(DISNF_PP,NNODE,VNPNT,NELEM_PP,CO) 
-      ENDIF 
+      IF(MPI_RANK_P.NE.0)THEN !gldsjvsssfdslfkgsd
+          DO IE_PP=1,NNODE
+            DO IV=VSPACE_FIRST,VSPACE_LAST
+              DO IN=1,NNODE
+                DISNF_PP(IN,IV,IE_PP) = 0.0
+              ENDDO
+            ENDDO
+          ENDDO
+      ENDIF !  IF(MPI_RANK_P.NE.0)THEN !gldsjvsssfdslfkgsd
 !
 ! *** ASK THE USER IF THEY ARE USING A RESTART FILE AS INITIAL CONDITIONS 
 !
-      IF(RANK.EQ.0)THEN 
-      WRITE(*,*) 
       RS = IVD%RS
-      ENDIF      !LINKS WITH IF STATEMENT ON LINE 37 
-      CALL MPI_BCAST(RS,1,MPI_INTEGER,0,MPI_COMM_WORLD,MPI_IERR) 
 !
 ! *** IF USING A RESTART FILE ASK FOR THE NAME OF THE FILE 
 !
- 151  IF(RS.EQ.1)THEN
-      PRINT*,'I AM READING FROM THE RESTART FILE'
-      IF(RANK.EQ.0)THEN 
-      filename = IVD%RestartInFile
-      PRINT*,'READING RESTART FILE = ',IVD%RestartInFile
-      OPEN  (11, file=filename, status='old') 
-      WRITE(*,*) 
+      IF(RS.EQ.1)THEN !dlafcccnwweppsdc
+        PRINT*,'I AM READING FROM THE RESTART FILE'
+        IF(MPI_RANK_P.EQ.0)THEN !dlssprrertepi
+          filename = IVD%RestartInFile
+          PRINT*,'READING RESTART FILE = ',IVD%RestartInFile
+          OPEN  (11, file=filename, status='old') 
+          WRITE(*,*) 
 !
-! *** READ IN DATA FROM RESTRT FILE 
+! ***     READ IN DATA FROM RESTRT FILE 
 !
-      READ(11,*) TEXT 
-      READ(11,*) TEST1,TEST2 
+          READ(11,*) TEXT 
+          READ(11,*) TEST1,TEST2 
 !
-! *** CHECK DATA 
+! ***     CHECK DATA 
 !
-      IF((TEST1.NE.NPOIN).OR.(TEST2.NE.VNPNT))THEN 
-      WRITE(*,208) 
-      WRITE(*,209) 
-      STOP 
-      ENDIF 
+          IF((TEST1.NE.NPOIN).OR.(TEST2.NE.VNPNT))THEN !kjlkfjsdklalaa
+            WRITE(*,208) 
+            WRITE(*,209) 
+            STOP 
+          ENDIF !IF((TEST1.NE.NPOIN).OR.(TEST2.NE.VNPNT))THEN !kjlkfjsdklalaa
 !
-      ENDIF       !LINKS WITH IF STATEMENT ON LINE 48 
+        ENDIF ! IF(MPI_RANK_P.EQ.0)THEN !dlssprrertepi
 !
-! *** READ DISNF ONTO MASTER AND DISTRIBUTE 
+! ***   READ DISNF ONTO MASTER AND DISTRIBUTE 
 !
-       DO 1010 IV=1,VNPNT 
-       DO 1011 IE=1,NELEM 
-             IF(RANK.EQ.0)THEN 
+        ! THIS IS SUPER SLOW BUT FAST TO IMPLEMENT
+        DO 1010 IV=1,VNPNT 
+          DO 1011 IE=1,NELEM 
+            IF(MPI_RANK_P.EQ.0)THEN !flkjdssssssyy
               READ(11,*) (DISNFPARCEL(I),I=1,NNODE) 
-! *** CHECK THE SLAVE ALLOCATION OF THIS ELEMENT 
-              NRANK=ELGRP(IE,1) 
-                IE_PP=ELGRP(IE,2) 
-            ENDIF     !LINKS WITH IF STATEMENT ON LINE 73 
-! *** BROADCAST 
-                CALL MPI_BCAST(NRANK,1,MPI_INTEGER,0,& 
-     &                      MPI_COMM_WORLD,MPI_IERR) 
-                CALL MPI_BCAST(IE_PP,1,MPI_INTEGER,0,& 
-     &                      MPI_COMM_WORLD,MPI_IERR) 
-                CALL MPI_BCAST(DISNFPARCEL,NNODE,MPI_REAL,0,& 
-     &                      MPI_COMM_WORLD,MPI_IERR) 
-                IF(RANK.EQ.NRANK)THEN 
+! ***         CHECK THE SLAVE ALLOCATION OF THIS ELEMENT 
+              NRANK_P=ELGRP(IE,1) 
+              IE_PP=ELGRP(IE,2) 
+            ENDIF !flkjdssssssyy
+! ***       BROADCAST 
+            IF((IV.GE.VSPACE_FIRST).AND.(IV.LE.VSPACE_LAST))THEN !dsfkjshd
+              CALL MPI_BCAST(NRANK_P,1,MPI_INTEGER,0,& 
+     &                    MPI_COMM_P,MPI_IERR) 
+              CALL MPI_BCAST(IE_PP,1,MPI_INTEGER,0,& 
+     &                    MPI_COMM_P,MPI_IERR) 
+              CALL MPI_BCAST(DISNFPARCEL,NNODE,MPI_REAL,0,& 
+     &                    MPI_COMM_P,MPI_IERR) 
+              IF(MPI_RANK_P.EQ.NRANK_P)THEN !fldjssmfslms
                 DO IN=1,NNODE 
-                     DISNF_PP(IN,IV,IE_PP)=DISNFPARCEL(IN) 
+                  DISNF_PP(IN,IV,IE_PP)=DISNFPARCEL(IN) 
                 ENDDO 
-            ENDIF          !LINKS WITH IF STATEMENT ON LINE 85 
- 1011 CONTINUE 
- 1010 CONTINUE 
+              ENDIF  ! fldjssmfslms
+            ENDIF !dsfkjshd
+ 1011     CONTINUE 
+ 1010   CONTINUE 
 !
-! *** CLOSE RESTART FILE 
+! ***   CLOSE RESTART FILE 
 !
-         IF(RANK.EQ.0)CLOSE(11) 
+        IF(MPI_RANK_P.EQ.0)CLOSE(11) 
 !
-          ELSE 
+      ELSE ! IF(RS.EQ.1)THEN !dlafcccnwweppsdc
 !
-! *** GET THE INITIAL CONDITIONS:
+! ***   GET THE INITIAL CONDITIONS:
 !
-         IF(RANK.EQ.0)THEN 
+        IF(MPI_RANK_P.EQ.0)THEN !difadocaodmcadc
+          T1 = IVD%T1
+          P1 = IVD%P1
+          U0 = IVD%U0
+          V0 = IVD%V0
 !
-       T1 = IVD%T1
-       P1 = IVD%P1
-       U0 = IVD%U0
-       V0 = IVD%V0
-!
-! *** CALCULATE GAS PROPERTIES USED FOR MAXWELL DISTRIBUTION 
+! ***     CALCULATE GAS PROPERTIES USED FOR MAXWELL DISTRIBUTION 
 !    
-      RHO1=(P1*(10**05))/(GC*T1)        !DENSITIES 
-      n1=RHO1*NA/M
-      TMP1=RHO1/(2*P1*(10**05)) 
-      BETA1=SQRT(TMP1)                !BETA VARIABLE
-      ENDIF               !LINKS TO THE IF STATEMENT ON LINE 104 
-      CALL MPI_BCAST(BETA1,1,MPI_REAL,0,MPI_COMM_WORLD,MPI_IERR)
-      CALL MPI_BCAST(n1,1,MPI_REAL,0,MPI_COMM_WORLD,MPI_IERR)
-      CALL MPI_BCAST(U0,1,MPI_REAL,0,MPI_COMM_WORLD,MPI_IERR)
-      CALL MPI_BCAST(V0,1,MPI_REAL,0,MPI_COMM_WORLD,MPI_IERR)
+          RHO1=(P1*(10**05))/(GC*T1)        !DENSITIES 
+          n1=RHO1*NA/M
+          TMP1=RHO1/(2*P1*(10**05)) 
+          BETA1=SQRT(TMP1)                !BETA VARIABLE
+        ENDIF !IF(MPI_RANK_P.EQ.0)THEN !difadocaodmcadc
+        CALL MPI_BCAST(BETA1,1,MPI_REAL,0,MPI_COMM_P,MPI_IERR)
+        CALL MPI_BCAST(n1,1,MPI_REAL,0,MPI_COMM_P,MPI_IERR)
+        CALL MPI_BCAST(U0,1,MPI_REAL,0,MPI_COMM_P,MPI_IERR)
+        CALL MPI_BCAST(V0,1,MPI_REAL,0,MPI_COMM_P,MPI_IERR)
 !
-! *** BEGIN LOOP OVER THE PHYSICAL SPACE DISCONTINUOUS NODES 
+! ***   BEGIN LOOP OVER THE PHYSICAL SPACE DISCONTINUOUS NODES 
 !
-      IF(RANK.NE.0)THEN
+        IF(MPI_RANK_P.NE.0)THEN
 !
-! *** IF VACCUUM FOR INTITIAL CONDITION 
+! ***     IF VACCUUM FOR INTITIAL CONDITION 
+!         
+          IF(n1.GE.1e-20)THEN !djfhadcpaaaargekj
+            DO 1006 IE=1,NELEM_PP 
+              DO 1007 IN=1,NNODE 
+!           
+! ***           LOOP OVER ALL VELOCITY SPACE NODES 
+!           
+                CO=(BETA1**2)/(PI)            !COEFFICIENT OF THE MAXWELL DISTRIBUTION FUNCTION 
+                DO 1002 INV=VSPACE_FIRST,VSPACE_LAST
+                  ETA=VCORD(1,INV)
+                  ZETA=VCORD(2,INV)
+!                 TRANSFORM FROM ETA-ZETA COORDS TO R-THETA COORDS
+                  R=ETA*(rv/2)+(rv/2)
+                  THETA=ZETA*PI
+!                 TRANSORM TO CARTESIANS
+                  UX=R*COS(THETA)
+                  UY=R*SIN(THETA)
+                  TMP=(UX-U0)*(UX-U0)+(UY-V0)*(UY-V0)         
+                  SPEED=SQRT(TMP)     !MOLECULAR SPEED AT THIS COORDINATE IN VELSPACE MESH 
+                  TMP=-((BETA1**2)*(SPEED**2)) 
+                  F0=CO*EXP(TMP)         !DISTRIBUTION FUNCTION
+                  DISNF_PP(IN,INV,IE)=n1*F0!INITIAL CONDITION (nf) MATRIX 
+!           
+! ***             END LOOP OVER VELOCITY SPACE NODES 
+!           
+ 1002           CONTINUE 
+!           
+! ***           END LOOP OVER THE PHYSICAL SPACE DISCONTINUOUS NODES 
+!           
+ 1007         CONTINUE  
+ 1006       CONTINUE  
+!           
+          ENDIF  ! IF(n1.GE.1e-20)THEN !djfhadcpaaaargekj
+        ENDIF
 !
-      IF(n1.LT.1e-20)GOTO 1005 
- 
-      DO 1006 IE=1,NELEM_PP 
-      DO 1007 IN=1,NNODE 
+! ***   SYNCHRONISE PROCESSORS 
 !
-! *** LOOP OVER ALL VELOCITY SPACE NODES 
+        CALL MPI_BARRIER(MPI_COMM_P,MPI_IERR) 
 !
-      CO=(BETA1**2)/(PI)            !COEFFICIENT OF THE MAXWELL DISTRIBUTION FUNCTION 
-      DO 1002 INV=1,VNPNT
-      ETA=VCORD(1,INV)
-      ZETA=VCORD(2,INV)
-! TRANSFORM FROM ETA-ZETA COORDS TO R-THETA COORDS
-      R=ETA*(rv/2)+(rv/2)
-      THETA=ZETA*PI
-! TRANSORM TO CARTESIANS
-      UX=R*COS(THETA)
-      UY=R*SIN(THETA)
-            TMP=(UX-U0)*(UX-U0)+(UY-V0)*(UY-V0)         
-            SPEED=SQRT(TMP)     !MOLECULAR SPEED AT THIS COORDINATE IN VELSPACE MESH 
-            TMP=-((BETA1**2)*(SPEED**2)) 
-            F0=CO*EXP(TMP)         !DISTRIBUTION FUNCTION
-            DISNF_PP(IN,INV,IE)=n1*F0!INITIAL CONDITION (nf) MATRIX 
- !           DISNF_PP(IN,INV,IE)=1.0
-!
-! *** END LOOP OVER VELOCITY SPACE NODES 
-!
- 1002 CONTINUE 
-!
-! *** END LOOP OVER THE PHYSICAL SPACE DISCONTINUOUS NODES 
-!
- 1007 CONTINUE  
- 1006 CONTINUE  
-!
-       ENDIF        !LINKS WITH IF STATEMENT ON LINE 145 
- 1005 CONTINUE 
-!
-! *** SYNCHRONISE PROCESSORS 
-!
-        CALL MPI_BARRIER(MPI_COMM_WORLD,MPI_IERR) 
-!
-        ENDIF  
+      ENDIF  !   ELSE ! IF(RS.EQ.1)THEN !dlafcccnwweppsdc
 !
 ! *** ASK WHETHER THERE IS AN INFLOW PRESENT? 
 !
-       IF(RANK.EQ.0)THEN 
-      WRITE(*,*) 
       I = IVD%INF
       IF(I.EQ.1)THEN 
         CINF = IVD%CINF 
@@ -218,13 +229,6 @@
         CINF(3)=0.0 
         CINF(4)=0.0
       ENDIF 
-      WRITE(*,*) 
-      WRITE(*,*) 
-      ENDIF     !LINKS WITH IF STATEMENT ON LINE 178 
-!
-! *** BROADCAST CINF TO ALL PROCESSORS 
-!
-      CALL MPI_BCAST(CINF,4,MPI_REAL,0,MPI_COMM_WORLD,MPI_IERR) 
 !
 ! *** FORMAT STATEMENTS 
 !

@@ -89,8 +89,7 @@
         INTEGER MPI_RANK_P,MPI_SIZE_P,MPI_COMM_P,GROUP_P
         ! mpi-stuff for velocity space partitioning
         INTEGER MPI_RANK_V,MPI_SIZE_V,MPI_COMM_V,GROUP_V
-
-        INTEGER VNPNT_PART
+        INTEGER VNPNT_PART,VSPACE_FIRST,VSPACE_LAST
 !
 ! *** DECLARE REAL VARIABLES 
 ! 
@@ -135,106 +134,82 @@
         WRITE(*,*) 
         WRITE(*,*) 
         WRITE(*,*) 
+      ENDIF ! IF(MPI_RANK.EQ.0)THEN !fkljdfvvvvmffkd 
 ! 
 ! *** OPEN THE CONFIGURATION FILE (filename stored in INPUT FILE) 
 ! 
-        filename='run.inp' 
+      filename='run.inp' 
 ! 
-        OPEN(21,file=filename,status='old')
-        READ(21,*) filename 
-        CLOSE(21)
+      OPEN(21,file=filename,status='old')
+      READ(21,*) filename 
+      CLOSE(21)
 !
-        PRINT*,'CONFIGURATION FILE = ',filename 
-        OPEN (13,file=filename,status='old') 
-        WRITE(*,*)   
+      IF(MPI_RANK.EQ.0) PRINT*,'CONFIGURATION FILE = ',filename 
+      OPEN (13,file=filename,status='old') 
 !
 ! *** READ IN ALL THE INPUT VARIABLES AS A NAMELIST FROM THE CONFIGURATION FILE
 !
-        IVD%TORDER = 20
-        IVD%NTIME = 10000
-        IVD%FORCEOUT = 0
-        IVD%IMMAT = 1 
-        IVD%INF = 1
-        IVD%NVSPACEPART = 1
-        IVD%RS = 0
-        IVD%CSAFM = 0.5
-        IVD%rv = 2000
-        IVD%T1 = 293
-        IVD%P1 = 0.1
-        IVD%U0 = 100
-        IVD%V0 = 0.0
-        IVD%W = 1.0
-        IVD%ALPHA = 0.9
-        IVD%R = 287
-        IVD%d = 250e-12
-        IVD%M = 32
-        IVD%CINF(1) = 294 !INFLOW TEMP
-        IVD%CINF(2) = 0.001473 !INFLOW PRESSURE
-        IVD%CINF(3) = 171.85 !INFLOW U-VEL
-        IVD%CINF(4) = 0.0   !INFLOW V-VEL
-        IVD%LobattoFile = 'Lobatto20.txt' !Lobatto Quadrature File
-        IVD%PSpaceFile = 'AEROFOIL.RES' !PSpace Mesh File
-        IVD%OutFile = 'FILE.OUT' !Output File
-        IVD%PartitionFile = 'METIS3WAYPARTAEROFOIL13.RES' !METIS PARTITION FILE
-        IVD%RestartInFile = 'RESTART.RES' !RESTART INPUT FILE
-        IVD%ResidualFile = 'RESIDUAL.RES' !RESIDUAL FILE
-        IVD%ResultsFile1 = 'RESULTS1.RES' !RESULTS FILE 1
-        IVD%ResultsFile2 = 'RESULTS2.RES' !RESULTS FILE 2
-        IVD%RestartOutFile = 'RESTART.RES' !RESTART OUTPUT FILE
-        IVD%GIDMeshFile = 'GIDMESH.RES' !GID MESH FILE
-        READ(13,Input)
-        CLOSE(13)
+      IVD%TORDER = 20
+      IVD%NTIME = 10000
+      IVD%FORCEOUT = 0
+      IVD%IMMAT = 1 
+      IVD%INF = 1
+      IVD%NVSPACEPART = 1
+      IVD%RS = 0
+      IVD%CSAFM = 0.5
+      IVD%rv = 2000
+      IVD%T1 = 293
+      IVD%P1 = 0.1
+      IVD%U0 = 100
+      IVD%V0 = 0.0
+      IVD%W = 1.0
+      IVD%ALPHA = 0.9
+      IVD%R = 287
+      IVD%d = 250e-12
+      IVD%M = 32
+      IVD%CINF(1) = 294 !INFLOW TEMP
+      IVD%CINF(2) = 0.001473 !INFLOW PRESSURE
+      IVD%CINF(3) = 171.85 !INFLOW U-VEL
+      IVD%CINF(4) = 0.0   !INFLOW V-VEL
+      IVD%LobattoFile = 'Lobatto20.txt' !Lobatto Quadrature File
+      IVD%PSpaceFile = 'AEROFOIL.RES' !PSpace Mesh File
+      IVD%OutFile = 'FILE.OUT' !Output File
+      IVD%PartitionFile = 'METIS3WAYPARTAEROFOIL13.RES' !METIS PARTITION FILE
+      IVD%RestartInFile = 'RESTART.RES' !RESTART INPUT FILE
+      IVD%ResidualFile = 'RESIDUAL.RES' !RESIDUAL FILE
+      IVD%ResultsFile1 = 'RESULTS1.RES' !RESULTS FILE 1
+      IVD%ResultsFile2 = 'RESULTS2.RES' !RESULTS FILE 2
+      IVD%RestartOutFile = 'RESTART.RES' !RESTART OUTPUT FILE
+      IVD%GIDMeshFile = 'GIDMESH.RES' !GID MESH FILE
+      READ(13,Input)
+      CLOSE(13)
 ! 
 ! *** OPEN THE LOBATTO WEIGHTINGS FILES 
 ! *** FIRST FOR FULL VMESH INTEGRATION
-        filename = IVD%LobattoFile
+      filename = IVD%LobattoFile
+      IF(MPI_RANK.EQ.0) THEN
         PRINT*,'READING V-SPACE LOBATTO FILE = ',IVD%LobattoFile
-        OPEN (10, file=filename, status='old') 
-        WRITE(*,*)
+      ENDIF
+      OPEN (10, file=filename, status='old') 
 ! 
 ! *** READ IN THE LOBATTO ORDER 
 !	 
-        READ (10,*) RORDER 
-        TORDER = IVD%TORDER
-        MPI_SIZE_V = IVD%NVSPACEPART
-        MPI_SIZE_P = MPI_SIZE / MPI_SIZE_V
-! 
+      READ (10,*) RORDER 
+      TORDER = IVD%TORDER
+      MPI_SIZE_V = IVD%NVSPACEPART
+      MPI_SIZE_P = MPI_SIZE / MPI_SIZE_V
 ! *** CALCULATE THE NUMBER OF NODES IN VSPACE 
-! 
-        VNPNT=RORDER*TORDER
-        VNPNT_PART=VNPNT/MPI_SIZE_V
-        ALLOCATE(VCORD(3,VNPNT))  
-! 
-! *** CALL VSPACE SUBROUTINE 
-! 
-        CALL VSPACE(RORDER,TORDER,VNPNT,VCORD,SUMWEIGHT) 
-        rv = IVD%rv
-        FORCEOUT = IVD%FORCEOUT
-! 
-      ENDIF ! IF(MPI_RANK.EQ.0)THEN !fkljdfvvvvmffkd 
-! 
-! *** MPI BCASTS 
-! 
-      CALL MPI_BCAST(VNPNT,1,MPI_INTEGER,0,MPI_COMM_WORLD,MPI_IERR)
-      CALL MPI_BCAST(VNPNT_PART,1,MPI_INTEGER,0,MPI_COMM_WORLD,MPI_IERR)
-      CALL MPI_BCAST(MPI_SIZE_P,1,MPI_INTEGER,0,MPI_COMM_WORLD,MPI_IERR)
-      CALL MPI_BCAST(MPI_SIZE_V,1,MPI_INTEGER,0,MPI_COMM_WORLD,MPI_IERR)
-      IF(MPI_RANK.NE.0)THEN
-        ALLOCATE(VCORD(3,VNPNT))
-      ENDIF 
-      CALL MPI_BCAST(rv,1,MPI_REAL,0,MPI_COMM_WORLD,MPI_IERR) 
-      CALL MPI_BCAST(FORCEOUT,1,MPI_INTEGER,0,MPI_COMM_WORLD,MPI_IERR)
-      CALL MPI_BCAST(SUMWEIGHT,1,MPI_REAL,0,MPI_COMM_WORLD,MPI_IERR)
-      CALL MPI_BCAST(RORDER,1,MPI_INTEGER,0,MPI_COMM_WORLD,MPI_IERR)
-      CALL MPI_BCAST(TORDER,1,MPI_INTEGER,0,MPI_COMM_WORLD,MPI_IERR)
-      CALL MPI_BCAST(VCORD,3*VNPNT,MPI_REAL,0,MPI_COMM_WORLD,MPI_IERR)
-!
-! *** SPLIT IN VELOCITY SPACE
-!
+      VNPNT=RORDER*TORDER
+      rv = IVD%rv
+      FORCEOUT = IVD%FORCEOUT
 
+ 
       GROUP_P = MPI_RANK / MPI_SIZE_P
       GROUP_V = MPI_RANK - GROUP_P*MPI_SIZE_P
-      
+      VNPNT_PART=VNPNT/MPI_SIZE_V
+      VSPACE_FIRST=VNPNT_PART*MPI_RANK_V+1
+      VSPACE_LAST=VNPNT_PART*(MPI_RANK_V+1)
+
       CALL MPI_COMM_SPLIT(MPI_COMM_WORLD,GROUP_P,MPI_RANK_P,MPI_COMM_P,&
      &               MPI_IERR)
       CALL MPI_COMM_SPLIT(MPI_COMM_WORLD,GROUP_V,MPI_RANK_V,MPI_COMM_V,&
@@ -243,6 +218,10 @@
       WRITE(*,"A5,5I6")"MPI",MPI_RANK,GROUP_V,MPI_RANK_V,&
      &                          GROUP_P,MPI_RANK_P  
 
+      ALLOCATE(VCORD(3,VNPNT)) ! allocating VCORD on all VSPACE on all ranks
+      CALL VSPACE(RORDER,TORDER,VNPNT,VCORD,SUMWEIGHT) 
+
+!
 ! *** OPEN PHYSICAL SPACE MESH DATA FILE AND READ GLOBAL PARAMETERS 
 ! 
       IF(MPI_RANK_P.EQ.0)THEN  !sdfhasdcabadfadaaa
@@ -381,10 +360,11 @@
      &                  NBNOR,NGEOM,RORDER,TORDER,& 
      &                  VNPNT,SUMWEIGHT,VCORD,& 
      &                  rv,RHO,UVEL,VVEL,& 
-     &                  PS,TEMP,ALPHA,CINF,MXSID,MPI_RANK,& 
+     &                  PS,TEMP,ALPHA,CINF,MXSID,& 
      &                  MPI_SIZE,IVD,FORCEOUT,d,R,M,&
      &                  MPI_RANK_P,MPI_SIZE_P,MPI_COMM_P,&
-     &                  MPI_RANK_V,MPI_SIZE_V,MPI_COMM_V) 
+     &                  MPI_RANK_V,MPI_SIZE_V,MPI_COMM_V,&
+     &                  VSPACE_FIRST,VSPACE_LAST) 
 ! 
 ! *** END OF PROGRAM 
 ! 
