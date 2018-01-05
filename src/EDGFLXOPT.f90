@@ -2,8 +2,9 @@
      &             NX,NY,EL,UX,UY,RSIDO,BSIDO,NBOUN,& 
      &                       NBNOR,ALPHA,ETA,VNPNT,& 
      &               IV,DISNF,UMEAN,CINF,rv,LCOMM_PP,& 
-     &             NGRPS,ISCOM_PP,RANK,NCOMM_PP,VCORD,RORDER,&
-     &              TORDER,SDCOM_PP,R,M,ITIME,GCOMM)
+     &             NGRPS,ISCOM_PP,MPI_RANK_P,NCOMM_PP,VCORD,RORDER,&
+     &              TORDER,SDCOM_PP,R,M,ITIME,GCOMM,MPI_COMM_P,&
+     &                     VSPACE_FIRST,VSPACE_LAST)
 ! 
 ! *** SUBROUTINE TO CALCULATE THE FLUXES TRANSFERRED BETWEEN ELEMENTS AT EDGES 
 ! 
@@ -12,15 +13,18 @@
 ! 
       INTEGER NELEM,NSIDE_PP,NBOUN,NBNOR,MXCOM_PP,NGRPS,ISG,FLAG 
       INTEGER IS_PP,ISC_PP,IG,TEST,IGT,NSIDETMP,IST,ISGT,NCOMM_PP,ISC 
-      INTEGER LCOMM_PP(NSIDE_PP),ISCOM_PP(NSIDE_PP),MPI_IERR,RANK,IE,ISL,ISR 
+      INTEGER LCOMM_PP(NSIDE_PP),ISCOM_PP(NSIDE_PP),MPI_IERR,MPI_RANK_P
+      INTEGER MPI_COMM_P,IE,ISL,ISR 
       INTEGER ISIDE(8,NSIDE_PP),VNPNT,IV,OPPSLAVERANK,RORDER,TORDER 
       INTEGER MPI_STATUS(MPI_STATUS_SIZE),BSIDO(6,NBOUN),INL1,INL2 
       INTEGER IS,IP1,IEL,IER,IN,JN,INR1, INR2,SDCOM_PP(3,NCOMM_PP) 
       INTEGER ITIME, IS_OTHER, IELR, INLR1,INLR2
+      INTEGER VSPACE_FIRST,VSPACE_LAST
 ! 
       REAL NX(NSIDE_PP),NY(NSIDE_PP),UX,UY,ALEN,RSIDO(NBNOR,NBOUN) 
       REAL MMAT(2,2),FN(2),EL(NSIDE_PP),CM,ALPHA,CINF(4) 
-      REAL RHS(1,3,NELEM),RHSI(2),DISNF(3,VNPNT,NELEM) 
+      REAL RHS(1,3,NELEM),RHSI(2)
+      REAL DISNF(3,VSPACE_FIRST:VSPACE_LAST,NELEM) 
       REAL UMEAN(NELEM),EDGUN(2),SCPR,RV,VCORD(3,VNPNT) 
       REAL FLUXN(4),FLUYN(4),ETA(NBOUN),CO,R,M
       INTEGER GCOMM(NGRPS,NGRPS)
@@ -28,13 +32,13 @@
 !     COMMUNICATION STUFF (OPTIMIZATION)
       INTEGER :: SENDRECV_TOT_LENGTH_MAX, OFFSET 
       INTEGER SENDRECV_MAX_LENGTHS(NGRPS)! MAX LENGTHS OF DATA TO SEND/RECV TO/FROM OTHER RANKS
-      INTEGER SEND_LENGTHS(NGRPS) ! ACTUAL LENGTHS (SEND) FOR EACH RANK
-      INTEGER RECV_LENGTHS(NGRPS) ! ACTUAL LENGTHS (RECV) FOR EACH RANK
-      INTEGER SENDRECV_START_OFFSETS(NGRPS) ! OFFSET OF FIRST ELEMENT TO SEND TO ANY GIVEN RANK 
+      INTEGER SEND_LENGTHS(NGRPS) ! ACTUAL LENGTHS (SEND) FOR EACH MPI_RANK_P
+      INTEGER RECV_LENGTHS(NGRPS) ! ACTUAL LENGTHS (RECV) FOR EACH MPI_RANK_P
+      INTEGER SENDRECV_START_OFFSETS(NGRPS) ! OFFSET OF FIRST ELEMENT TO SEND TO ANY GIVEN MPI_RANK_P 
       REAL :: SEND_EDGE_DATA(5000)!
       REAL :: RECV_EDGE_DATA(5000)!
-      INTEGER :: SEND_EDGE_DATA_IDX(5000)! LOCAL EDGE INDICES ON OPPOSITE RANK    
-      INTEGER :: RECV_EDGE_DATA_IDX(5000)! LOCAL EDGE INDICES ON CURRENT RANK
+      INTEGER :: SEND_EDGE_DATA_IDX(5000)! LOCAL EDGE INDICES ON OPPOSITE MPI_RANK_P    
+      INTEGER :: RECV_EDGE_DATA_IDX(5000)! LOCAL EDGE INDICES ON CURRENT MPI_RANK_P
       INTEGER :: MPI_COMM_SLAVES ! SLAVES COMMUNICATOR
       INTEGER :: COLOR,SLAVERANK 
       INTEGER :: EDGCOUNT
@@ -49,10 +53,10 @@
 
 !     SETUP COMMUNICATION STUFF (OPTIMIZATION)
 
-      IF (RANK.NE.0) THEN ! adadadfadfad
+      IF (MPI_RANK_P.NE.0) THEN ! adadadfadfad
      
         DO IG=1,NGRPS
-            SENDRECV_MAX_LENGTHS(IG) = GCOMM(RANK,IG)
+            SENDRECV_MAX_LENGTHS(IG) = GCOMM(MPI_RANK_P,IG)
         ENDDO
 
         SENDRECV_START_OFFSETS(1) = 0
@@ -75,16 +79,16 @@
    
         ! To create new communicator 
             COLOR = 1
-            SLAVERANK = RANK-1
-      ELSE  ! IF (RANK.NE.0) ! adadadfadfad
+            SLAVERANK = MPI_RANK_P-1
+      ELSE  ! IF (MPI_RANK_P.NE.0) ! adadadfadfad
             COLOR = MPI_UNDEFINED
             SLAVERANK = 0
-      ENDIF ! IF (RANK.NE.0) ! adadadfadfad
+      ENDIF ! IF (MPI_RANK_P.NE.0) ! adadadfadfad
  
-      CALL MPI_COMM_SPLIT(MPI_COMM_WORLD,COLOR,SLAVERANK,&
+      CALL MPI_COMM_SPLIT(MPI_COMM_P,COLOR,SLAVERANK,&
      &                          MPI_COMM_SLAVES,MPI_IERR)
        
-      IF(RANK.NE.0)THEN !kdjfhsewew
+      IF(MPI_RANK_P.NE.0)THEN !kdjfhsewew
 ! 
 ! *** BEGIN LOOP OVER EACH ELEMENT EDGE 
 !
@@ -106,7 +110,7 @@
            IF(IER.EQ.0)THEN  ! dlkfsdaklfasklda 
              CALL GETBOU(NBOUN,NBNOR,NELEM,BSIDO,IEL,RSIDO,IP1,& 
      &            RHS,INL1,INL2,UX,UY,ALPHA,ETA,VNPNT,&
-     &            IV,DISNF,UMEAN,CINF,rv,RANK,VCORD,RORDER,TORDER&
+     &            IV,DISNF,UMEAN,CINF,rv,MPI_RANK_P,VCORD,RORDER,TORDER&
      &            ,R,M) 
            ELSEIF((IER.NE.-1).AND.(IEL.NE.-1))THEN !dlkfsdaklfasklda 
 ! *** FOR INTERNAL SIDES: 
@@ -159,7 +163,7 @@
                
                IS_PP = SDCOM_PP(1,EDGCOUNT)
                IF(IS_PP.NE.IS) THEN  ! DEBUG
-               WRITE(*,*) "Rank, IS_PP != IS", RANK,IS_PP,IS
+                 WRITE(*,*) "Rank, IS_PP != IS", MPI_RANK_P,IS_PP,IS
                STOP
                ENDIF                 !DEBUG
 
@@ -167,7 +171,7 @@
                OPPSLAVERANK = SDCOM_PP(3,EDGCOUNT) - 1 ! ranks in the 
                                                  ! MPI_COMM_SLAVES communicator
                                                  ! are the rank in
-                                                 ! MPI_COMM_WORLD communicator
+                                                 ! MPI_COMM_P communicator
                                                  ! decreased by 1
                IS_OTHER = SDCOM_PP(2,EDGCOUNT)
               
@@ -225,8 +229,8 @@
      &                     SEND_LENGTHS(OPPSLAVERANK+1)+1 ! will be
                                                         ! multiplied by 2 when necessary
 
-!               WRITE(50+RANK,"(A9,3I4.1,I5.1,2ES13.4E2)"),"NEWSEND",&!DEBUG
-!     &                       RANK,RANK,OPPSLAVERANK+1,IS_OTHER,RHSI   !DEBUG !+1 to compare with old
+!               WRITE(50+MPI_RANK_P,"(A9,3I4.1,I5.1,2ES13.4E2)"),"NEWSEND",&!DEBUG
+!     &                       MPI_RANK_P,MPI_RANK_P,OPPSLAVERANK+1,IS_OTHER,RHSI   !DEBUG !+1 to compare with old
 
            ENDIF !dlkfsdaklfasklda 
 
@@ -236,8 +240,8 @@
      &             RECV_LENGTHS,1,MPI_INTEGER,&
      &             MPI_COMM_SLAVES,MPI_IERR)
 !      CALL MPI_BARRIER(MPI_COMM_SLAVES,MPI_IERR)! DEBUG
-!      WRITE(*,"(A10,8I5.1)") "NEWSEND", RANK, SEND_LENGTHS !DEBUG
-!      WRITE(*,"(A10,8I5.1)") "NEWRECV", RANK, RECV_LENGTHS !DEBUG
+!      WRITE(*,"(A10,8I5.1)") "NEWSEND", MPI_RANK_P, SEND_LENGTHS !DEBUG
+!      WRITE(*,"(A10,8I5.1)") "NEWRECV", MPI_RANK_P, RECV_LENGTHS !DEBUG
 !      CALL MPI_BARRIER(MPI_COMM_SLAVES,MPI_IERR) !DEBUG
 !
       CALL MPI_ALLTOALLV(SEND_EDGE_DATA,2*SEND_LENGTHS,&
@@ -277,14 +281,14 @@
              
             RHS(1,INLR1,IELR)=RHS(1,INLR1,IELR)-FLAG*RHSI(1)
             RHS(1,INLR2,IELR)=RHS(1,INLR2,IELR)-FLAG*RHSI(2)
-!            WRITE(50+RANK,"(A9,3I4.1,4I5.1,2ES13.4E2)"),"NEWRECV",&!DEBUG
-!     &         RANK,IG,RANK,INLR1,INLR2,IELR,IS,RHSI   !DEBUG !+1 to compare with old
+!            WRITE(50+MPI_RANK_P,"(A9,3I4.1,4I5.1,2ES13.4E2)"),"NEWRECV",&!DEBUG
+!     &         MPI_RANK_P,IG,MPI_RANK_P,INLR1,INLR2,IELR,IS,RHSI   !DEBUG !+1 to compare with old
 
 
          ENDDO
       ENDDO
 
-      ENDIF  ! IF(RANK.NE.0)  !kdjfhsewew
+      ENDIF  ! IF(MPI_RANK_P.NE.0)  !kdjfhsewew
 ! 
 ! *** FORMAT STATEMENTS 
 ! 

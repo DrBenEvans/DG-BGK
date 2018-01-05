@@ -6,7 +6,7 @@
      &                     VNPNT,SUMWEIGHT,VCORD,& 
      &                     rv,RHO,UVEL,VVEL,PS,& 
      &                     TEMP,ALPHA,CINF,MXSID,NPROC,IVD,FORCEOUT,&
-     &                     d,R,M&
+     &                     d,R,M,&
      &                     MPI_RANK_P,MPI_SIZE_P,MPI_COMM_P,&
      &                     MPI_RANK_V,MPI_SIZE_V,MPI_COMM_V,&
      &                     VSPACE_FIRST,VSPACE_LAST)
@@ -203,13 +203,16 @@
      &                  NSIDE_PP,ISIDE_PP,NX_PP,NY_PP,EL_PP,DISNF_PP,& 
      &                  VNPNT,SUMWEIGHT,DISNF_PP,rv,VCORD,& 
      &                  RHO_PP,UVEL_PP,VVEL_PP,PS_PP,TEMP_PP,& 
-     &                  ALPHA,CINF,RANK,NPROC,LCOMM_PP,GCOMM,NPGRP,IPCOM_PP,& 
+     &                  ALPHA,CINF,NPROC,LCOMM_PP,GCOMM,NPGRP,IPCOM_PP,& 
      &      ISCOM_PP,MXCOM_PP,NCOMM_PP,maxNELEM_PP,RORDER,TORDER,maxNPOIN_PP,&
-     &          SDCOM_PP,IVD,FORCEOUT,d,R,M)
+     &          SDCOM_PP,IVD,FORCEOUT,d,R,M,&
+     &                     MPI_RANK_P,MPI_SIZE_P,MPI_COMM_P,&
+     &                     MPI_RANK_V,MPI_SIZE_V,MPI_COMM_V,&
+     &                     VSPACE_FIRST,VSPACE_LAST)
 ! 
 ! *** OUTPUT FOR GID AND RESTART FILE 
 ! 
 !     CALL OUTPUT(NNODE ,NPOIN_PP ,NPOIN,NELEM ,NELEM_PP,COORD,& 
-!     &           INTMA, DISNF_PP, VNPNT,RANK,IPCOM_PP,ELGRP,IVD)
+!     &           INTMA, DISNF_PP, VNPNT,IPCOM_PP,ELGRP,IVD)
        RETURN 
        END 
