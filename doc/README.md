@@ -6,10 +6,13 @@ generations in order to facilitate the process of understanding how the code
 works.
 
 My work has been mainly related to the optimization of the multi process aspect
-of the program, through MPI.
+of the program, through MPI. Some notes can be found 
+[here](../doc/mpi_structure.md).
 
 In what follows, the claims made on lines marked with (?) would require some 
 verification.
+
+
 
 # Random notes, but important
 
