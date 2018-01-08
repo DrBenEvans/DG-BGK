@@ -111,7 +111,8 @@
              CALL GETBOU(NBOUN,NBNOR,NELEM,BSIDO,IEL,RSIDO,IP1,& 
      &            RHS,INL1,INL2,UX,UY,ALPHA,ETA,VNPNT,&
      &            IV,DISNF,UMEAN,CINF,rv,MPI_RANK_P,VCORD,RORDER,TORDER&
-     &            ,R,M) 
+     &            ,R,M,VSPACE_FIRST,VSPACE_LAST) 
+
            ELSEIF((IER.NE.-1).AND.(IEL.NE.-1))THEN !dlkfsdaklfasklda 
 ! *** FOR INTERNAL SIDES: 
 !  
