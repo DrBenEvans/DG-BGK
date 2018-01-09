@@ -1,5 +1,5 @@
 
-#MPI Implementation notes
+# MPI IMPLEMENTATION NOTES
 
 In the original implementation, no MPI was used. A domain decomposition with
 MPI was implemented later to tackle memory issues: the goal was *not*
@@ -10,7 +10,7 @@ relative to IO and to the domain decomposition logic as, e.g., splitting the
 mesh and set up the lookup tables for all the processes - see [main
 README](README.md).
 
-### Some comments on the old MPI implementation
+### SOME COMMENTS ON THE OLD MPI IMPLEMENTATION
 
 In the original MPI implementation, in most cases a very inefficient
 communication pattern was choosen, like the one descripted in the pseudocode
@@ -53,7 +53,7 @@ scheme millions of MPI_BCAST calls are performed.
 
 
 
-## Velocity space partitioning.
+## VELOCITY SPACE PARTITIONING.
 
 In order to do velocity space partitioning, the MPI communicator layout is the
 one depicted in this figure: ![communicator_layout.](communicators_layout.svg)
@@ -61,22 +61,42 @@ one depicted in this figure: ![communicator_layout.](communicators_layout.svg)
 visualise it separately).
 
 Some remarks:
-* Velocity space has been partitioned **(Performance problems coming from this 
-can be easily fixed.)**
+* Velocity space has been partitioned replicating the master-slave layout in
+  the original code *(Performance problems coming from this 
+can be easily fixed.)*
 
 List of relevant variables:
 * **VSPACE_FIRST**: First index of vspace that is in the responsibility of the
   current process.
 * **VSPACE_LAST**: Last index of vspace that is in the responsibility of the
   current process.
+* **VCORD**: the *u* and *v* coordinates associated to every point (labeled,
+  e.g. IV) in the velocity space. It has size 1:VNPNT on every rank instead of
+just the minimum possible which would be VSPACE_FIRS:VSPACE_LAST (it does not 
+contain a big amount of data, by the way).
 
-* **VCORD**
+### OUTPUT 
 
+The **OUTPUT** subroutine prints to file the content of the DISNF array, which
+contains the particle density in che cartesian product of partition and
+velocity space. In this subroutine, a communication pattern described in the
+[previous section](#some-comments-on-the-old-mpi-implementation) was used.
+In the new implementation, the subroutine consists of the following steps:
+* All the "master" ranks (having MPI_RANK_P equal to 0) collect and reorder the
+  data pertaining to their velocity space partition from the other ranks in the
+same MPI_COMM_P communicator:
+    *  Each rank sends to the master in its MPI_COMM_P its whole DISNF_PP
+       array (which has size 3x[VSPACE_FIRST:VSPACE_LAST]xNELEM_PP).
+    *  The master ranks in every communicator MPI_COMMP_P make use of the ELGRP
+       dictionary to dispatch the content of each DISNF_PP received to the
+right location in DISNF (which has size  3x[VSPACE_FIRST:VSPACE_LAST]xNELEM).
+* The master rank in MPI_COMM_WORLD (that is also the master rank in the
+  MPI_COMM_V communicator between the ranks having MPI_RANK_P equal to zero)
+collects the DISNF arrays coming from each other rank in the MPI_COMM_V
+communicator and writes the content to a file.
 
-### Notes
+### NOTES
 
 * The **INICON** and **INICON2** subroutines have been modified for VSPACE
   partitioning, but the highly inefficient communication pattern was kept in
 place, since this is not a performance-critical part of the program.
-
-
