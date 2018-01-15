@@ -87,178 +87,152 @@
  
       CALL MPI_COMM_SPLIT(MPI_COMM_P,COLOR,SLAVERANK,&
      &                          MPI_COMM_SLAVES,MPI_IERR)
-       
-      IF(MPI_RANK_P.NE.0)THEN !kdjfhsewew
-! 
-! *** BEGIN LOOP OVER EACH ELEMENT EDGE 
-!
-         DO 1000 IS=1,NSIDE_PP 
-! 
-! *** NODES AND ELEMENTS ASSOCIATED WITH EDGE 
-! 
-           IP1=ISIDE(1,IS)                 !FIRST NODE NUMBER 
-           IEL=ISIDE(3,IS)                 !LHS ELEMENT NUMBER 
-           IER=ISIDE(4,IS)                 !RHS ELEMENT NUMBER 
-           INL1=ISIDE(5,IS)        !LHS LOCAL NODE 1 
-           INL2=ISIDE(6,IS)        !LHS LOCAL NODE 2 
-           INR1=ISIDE(7,IS)        !RHS LOCAL NODE 1 
-           INR2=ISIDE(8,IS)        !RHS LOCAL NODE 2
-           SCPR=UX*NX(IS)+UY*NY(IS) 
-! 
-! *** SKIP TO SEPARATE SUBROUTINE FOR BOUNDARY EDGES 
-!	 
-           IF(IER.EQ.0)THEN  ! dlkfsdaklfasklda 
-             CALL GETBOU(NBOUN,NBNOR,NELEM,BSIDO,IEL,RSIDO,IP1,& 
-     &            RHS,INL1,INL2,UX,UY,ALPHA,ETA,VNPNT,&
-     &            IV,DISNF,UMEAN,CINF,rv,MPI_RANK_P,VCORD,RORDER,TORDER&
-     &            ,R,M,VSPACE_FIRST,VSPACE_LAST) 
 
-           ELSEIF((IER.NE.-1).AND.(IEL.NE.-1))THEN !dlkfsdaklfasklda 
-! *** FOR INTERNAL SIDES: 
-!  
-! *** STORE THE UPSTREAM EDGE UNKNOWNS IN UNK1 AND UNK2
-! *** AND COMPUTE THE BGK COLLISION TERM 
-! 
-             IF(SCPR.GT.0.0)THEN 
-               EDGUN(1)=DISNF(INL1,IV,IEL)-UMEAN(IEL) 
-               EDGUN(2)=DISNF(INL2,IV,IEL)-UMEAN(IEL)
-             ELSE 
-               EDGUN(1)=DISNF(INR1,IV,IER)-UMEAN(IER) 
-               EDGUN(2)=DISNF(INR2,IV,IER)-UMEAN(IER)
-             ENDIF 
-! 
-! *** GET THE FLUXES 
-! 
-             CALL GETFLU(2,EDGUN,FLUXN,FLUYN,UX,UY) 
-! 
-! *** SIDE LENGTH x (1/6) 
-             ALEN=(1.0/6.0)*EL(IS) 
-!	 
-! *** MULTIPLY THE !UPSTREAM! FLUXES BY THE APPROPRIATE NORMALS 
-! 
-             FN(1)=NX(IS)*FLUXN(1)+NY(IS)*FLUYN(1) 
-             FN(2)=NX(IS)*FLUXN(2)+NY(IS)*FLUYN(2)
-! 
-        CALL RFILLV(RHSI,2,CO) 
-! 
-             DO 401 IN=1,2 
-             DO 402 JN=1,2 
-               CM=FN(JN)*MMAT(IN,JN)*ALEN 
-               RHSI(IN)=RHSI(IN)-CM 
-  402 CONTINUE 
-  401 CONTINUE 
-! 
-! *** UPDATE THE UPSTREAM AND DOWNSTREAM ELEMENT RHS VALUES 
-! 
-             RHS(1,INR1,IER)=RHS(1,INR1,IER)-RHSI(1) 
-             RHS(1,INR2,IER)=RHS(1,INR2,IER)-RHSI(2) 
-             RHS(1,INL1,IEL)=RHS(1,INL1,IEL)+RHSI(1) 
-             RHS(1,INL2,IEL)=RHS(1,INL2,IEL)+RHSI(2)  
-! 
-
-           ELSE   !dlkfsdaklfasklda 
-
-
-! *** NOW DEAL WITH PROCESSOR BOUNDARY EDGES HERE!!!!! 
-               EDGCOUNT = EDGCOUNT + 1 ! index for edges on partition border
-               
-               IS_PP = SDCOM_PP(1,EDGCOUNT)
-               IF(IS_PP.NE.IS) THEN  ! DEBUG
-                 WRITE(*,*) "Rank, IS_PP != IS", MPI_RANK_P,IS_PP,IS
-               STOP
-               ENDIF                 !DEBUG
-
-
-               OPPSLAVERANK = SDCOM_PP(3,EDGCOUNT) - 1 ! ranks in the 
-                                                 ! MPI_COMM_SLAVES communicator
-                                                 ! are the rank in
-                                                 ! MPI_COMM_P communicator
-                                                 ! decreased by 1
-               IS_OTHER = SDCOM_PP(2,EDGCOUNT)
-              
-           IF((IEL.EQ.-1).AND.(SCPR.LT.0.0))THEN 
-               INLR1 = INR1
-               INLR2 = INR2
-               IELR = IER
-               FLAG = -1
-           ELSEIF((IER.EQ.-1).AND.(SCPR.GT.0.0))THEN
-               INLR1 = INL1
-               INLR2 = INL2
-               IELR = IEL
-               FLAG = 1
-           ELSE
-           CYCLE ! Sometimes SCPR == 0, we skip this iteration.
-           ENDIF
-               EDGUN(1)=DISNF(INLR1,IV,IELR)-UMEAN(IELR)
-               EDGUN(2)=DISNF(INLR2,IV,IELR)-UMEAN(IELR)
-!
-! *** UPDATE RHS
-!
-               CALL GETFLU(2,EDGUN,FLUXN,FLUYN,UX,UY)
-!
-               ALEN=(1.0/6.0)*EL(IS_PP)
-!
-!  *** MULTPLY UP(DOWN)STREAM FLUXES BY THE APPROPRIATE NORMALS
-!
-               FN(1)=NX(IS_PP)*FLUXN(1)+NY(IS_PP)*FLUYN(1)
-               FN(2)=NX(IS_PP)*FLUXN(2)+NY(IS_PP)*FLUYN(2)
-!
-               CALL RFILLV(RHSI,2,CO)
-!
-               DO IN=1,2
-                 DO JN=1,2
-                   CM=FN(JN)*MMAT(IN,JN)*ALEN
-                   RHSI(IN)=RHSI(IN)-CM
-                 ENDDO
-               ENDDO
-               
-!
-! *** UPDATE THE DOWN(UP)STREAM ELEMENT RHS VALUES
-!
-               RHS(1,INLR1,IELR)=RHS(1,INLR1,IELR)+FLAG*RHSI(1)
-               RHS(1,INLR2,IELR)=RHS(1,INLR2,IELR)+FLAG*RHSI(2)
-                  
-
-
-               OFFSET=SENDRECV_START_OFFSETS(OPPSLAVERANK+1)+&
-     &                                SEND_LENGTHS(OPPSLAVERANK+1)
-               SEND_EDGE_DATA(2*OFFSET+1)=RHSI(1)
-               SEND_EDGE_DATA(2*OFFSET+2)=RHSI(2)
-               SEND_EDGE_DATA_IDX(OFFSET+1)=FLAG*IS_OTHER ! STORING FLAG IN THIS WAY
-
-               SEND_LENGTHS(OPPSLAVERANK+1)= &
-     &                     SEND_LENGTHS(OPPSLAVERANK+1)+1 ! will be
-                                                        ! multiplied by 2 when necessary
-
-!               WRITE(50+MPI_RANK_P,"(A9,3I4.1,I5.1,2ES13.4E2)"),"NEWSEND",&!DEBUG
-!     &                       MPI_RANK_P,MPI_RANK_P,OPPSLAVERANK+1,IS_OTHER,RHSI   !DEBUG !+1 to compare with old
-
-           ENDIF !dlkfsdaklfasklda 
-
- 1000 CONTINUE ! END OF CYCLE OVER SIDES
      
-      CALL MPI_ALLTOALL(SEND_LENGTHS,1,MPI_INTEGER,&
-     &             RECV_LENGTHS,1,MPI_INTEGER,&
-     &             MPI_COMM_SLAVES,MPI_IERR)
-!      CALL MPI_BARRIER(MPI_COMM_SLAVES,MPI_IERR)! DEBUG
-!      WRITE(*,"(A10,8I5.1)") "NEWSEND", MPI_RANK_P, SEND_LENGTHS !DEBUG
-!      WRITE(*,"(A10,8I5.1)") "NEWRECV", MPI_RANK_P, RECV_LENGTHS !DEBUG
-!      CALL MPI_BARRIER(MPI_COMM_SLAVES,MPI_IERR) !DEBUG
+
+      IF(MPI_RANK_P.NE.0)THEN !kdjfhsewew
+        CALL MPI_COMM_RANK(MPI_COMM_SLAVES,SLAVERANK,MPI_IERR)
+! ***   BEGIN LOOP OVER EACH ELEMENT EDGE 
+        DO 1000 IS=1,NSIDE_PP 
+! *** NODES AND ELEMENTS ASSOCIATED WITH EDGE 
+          IP1=ISIDE(1,IS)                 !FIRST NODE NUMBER 
+          IEL=ISIDE(3,IS)                 !LHS ELEMENT NUMBER 
+          IER=ISIDE(4,IS)                 !RHS ELEMENT NUMBER 
+          INL1=ISIDE(5,IS)        !LHS LOCAL NODE 1 
+          INL2=ISIDE(6,IS)        !LHS LOCAL NODE 2 
+          INR1=ISIDE(7,IS)        !RHS LOCAL NODE 1 
+          INR2=ISIDE(8,IS)        !RHS LOCAL NODE 2
+          SCPR=UX*NX(IS)+UY*NY(IS) 
+! ***     SKIP TO SEPARATE SUBROUTINE FOR BOUNDARY EDGES 
+          IF(IER.EQ.0)THEN  ! dlkfsdaklfasklda 
+            CALL GETBOU(NBOUN,NBNOR,NELEM,BSIDO,IEL,RSIDO,IP1,& 
+     &           RHS,INL1,INL2,UX,UY,ALPHA,ETA,VNPNT,&
+     &           IV,DISNF,UMEAN,CINF,rv,MPI_RANK_P,VCORD,RORDER,TORDER&
+     &           ,R,M,VSPACE_FIRST,VSPACE_LAST) 
+
+          ELSEIF((IER.NE.-1).AND.(IEL.NE.-1))THEN !dlkfsdaklfasklda 
+! ***       FOR INTERNAL SIDES: 
+! ***       STORE THE UPSTREAM EDGE UNKNOWNS IN UNK1 AND UNK2
+! ***       AND COMPUTE THE BGK COLLISION TERM 
+! 
+            IF(SCPR.GT.0.0)THEN 
+              EDGUN(1)=DISNF(INL1,IV,IEL)-UMEAN(IEL) 
+              EDGUN(2)=DISNF(INL2,IV,IEL)-UMEAN(IEL)
+            ELSE 
+              EDGUN(1)=DISNF(INR1,IV,IER)-UMEAN(IER) 
+              EDGUN(2)=DISNF(INR2,IV,IER)-UMEAN(IER)
+            ENDIF 
+! ***       GET THE FLUXES 
+            CALL GETFLU(2,EDGUN,FLUXN,FLUYN,UX,UY) 
+! ***       SIDE LENGTH x (1/6) 
+            ALEN=(1.0/6.0)*EL(IS) 
+! ***       MULTIPLY THE !UPSTREAM! FLUXES BY THE APPROPRIATE NORMALS 
+            FN(1)=NX(IS)*FLUXN(1)+NY(IS)*FLUYN(1) 
+            FN(2)=NX(IS)*FLUXN(2)+NY(IS)*FLUYN(2)
+            CALL RFILLV(RHSI,2,CO) 
+            DO 401 IN=1,2 
+              DO 402 JN=1,2 
+                CM=FN(JN)*MMAT(IN,JN)*ALEN 
+                RHSI(IN)=RHSI(IN)-CM 
+  402         CONTINUE 
+  401       CONTINUE 
+! ***       UPDATE THE UPSTREAM AND DOWNSTREAM ELEMENT RHS VALUES 
+            RHS(1,INR1,IER)=RHS(1,INR1,IER)-RHSI(1) 
+            RHS(1,INR2,IER)=RHS(1,INR2,IER)-RHSI(2) 
+            RHS(1,INL1,IEL)=RHS(1,INL1,IEL)+RHSI(1) 
+            RHS(1,INL2,IEL)=RHS(1,INL2,IEL)+RHSI(2)  
+          ELSE   !dlkfsdaklfasklda 
+! ***     NOW DEAL WITH PROCESSOR BOUNDARY EDGES HERE!!!!! 
+            EDGCOUNT = EDGCOUNT + 1 ! index for edges on partition border
+            
+            IS_PP = SDCOM_PP(1,EDGCOUNT)
+            IF(IS_PP.NE.IS) THEN  ! DEBUG
+              WRITE(*,*) "Rank, IS_PP != IS", MPI_RANK_P,IS_PP,IS
+              STOP
+            ENDIF                 !DEBUG
+            OPPSLAVERANK = SDCOM_PP(3,EDGCOUNT) - 1 ! ranks in the 
+                                              ! MPI_COMM_SLAVES communicator
+                                              ! are the rank in
+                                              ! MPI_COMM_P communicator
+                                              ! decreased by 1
+            IS_OTHER = SDCOM_PP(2,EDGCOUNT)
+            
+            IF((IEL.EQ.-1).AND.(SCPR.LT.0.0))THEN 
+              INLR1 = INR1
+              INLR2 = INR2
+              IELR = IER
+              FLAG = -1
+            ELSEIF((IER.EQ.-1).AND.(SCPR.GT.0.0))THEN
+              INLR1 = INL1
+              INLR2 = INL2
+              IELR = IEL
+              FLAG = 1
+            ELSE
+              CYCLE ! Sometimes SCPR == 0, we skip this iteration.
+            ENDIF
+            EDGUN(1)=DISNF(INLR1,IV,IELR)-UMEAN(IELR)
+            EDGUN(2)=DISNF(INLR2,IV,IELR)-UMEAN(IELR)
+! ***       UPDATE RHS
+            CALL GETFLU(2,EDGUN,FLUXN,FLUYN,UX,UY)
 !
-      CALL MPI_ALLTOALLV(SEND_EDGE_DATA,2*SEND_LENGTHS,&
-     &      2*SENDRECV_START_OFFSETS,MPI_REAL,&
-     &      RECV_EDGE_DATA,2*RECV_LENGTHS,&
-     &      2*SENDRECV_START_OFFSETS,MPI_REAL,&
-     &      MPI_COMM_SLAVES,MPI_IERR)
+            ALEN=(1.0/6.0)*EL(IS_PP)
+!  ***      MULTPLY UP(DOWN)STREAM FLUXES BY THE APPROPRIATE NORMALS
+            FN(1)=NX(IS_PP)*FLUXN(1)+NY(IS_PP)*FLUYN(1)
+            FN(2)=NX(IS_PP)*FLUXN(2)+NY(IS_PP)*FLUYN(2)
+!
+            CALL RFILLV(RHSI,2,CO)
+!
+            DO IN=1,2
+              DO JN=1,2
+                CM=FN(JN)*MMAT(IN,JN)*ALEN
+                RHSI(IN)=RHSI(IN)-CM
+              ENDDO
+            ENDDO
+! ***       UPDATE THE DOWN(UP)STREAM ELEMENT RHS VALUES
+            RHS(1,INLR1,IELR)=RHS(1,INLR1,IELR)+FLAG*RHSI(1)
+            RHS(1,INLR2,IELR)=RHS(1,INLR2,IELR)+FLAG*RHSI(2)
+               
 
-      CALL MPI_ALLTOALLV(SEND_EDGE_DATA_IDX,SEND_LENGTHS,&
-     &      SENDRECV_START_OFFSETS,MPI_INTEGER,&
-     &      RECV_EDGE_DATA_IDX,RECV_LENGTHS,&
-     &      SENDRECV_START_OFFSETS,MPI_INTEGER,&
-     &      MPI_COMM_SLAVES,MPI_IERR)
 
-      DO IG=1,NGRPS
-         DO OFFSET=SENDRECV_START_OFFSETS(IG),&
+            OFFSET=SENDRECV_START_OFFSETS(OPPSLAVERANK+1)+&
+     &                             SEND_LENGTHS(OPPSLAVERANK+1)
+            SEND_EDGE_DATA(2*OFFSET+1)=RHSI(1)
+            SEND_EDGE_DATA(2*OFFSET+2)=RHSI(2)
+            SEND_EDGE_DATA_IDX(OFFSET+1)=FLAG*IS_OTHER ! STORING FLAG IN THIS WAY
+
+            SEND_LENGTHS(OPPSLAVERANK+1)= &
+     &                  SEND_LENGTHS(OPPSLAVERANK+1)+1 ! will be
+                                                     ! multiplied by 2 when necessary
+
+!            WRITE(50+MPI_RANK_P,"(A9,3I4.1,I5.1,2ES13.4E2)"),"NEWSEND",&!DEBUG
+!     &                    MPI_RANK_P,MPI_RANK_P,OPPSLAVERANK+1,IS_OTHER,RHSI   !DEBUG !+1 to compare with old
+
+          ENDIF !dlkfsdaklfasklda 
+
+ 1000   CONTINUE ! END OF CYCLE OVER SIDES
+     
+        CALL MPI_ALLTOALL(SEND_LENGTHS,1,MPI_INTEGER,&
+     &               RECV_LENGTHS,1,MPI_INTEGER,&
+     &               MPI_COMM_SLAVES,MPI_IERR)
+!        CALL MPI_BARRIER(MPI_COMM_SLAVES,MPI_IERR)! DEBUG
+!        WRITE(*,"(A10,8I5.1)") "NEWSEND", MPI_RANK_P, SEND_LENGTHS !DEBUG
+!        WRITE(*,"(A10,8I5.1)") "NEWRECV", MPI_RANK_P, RECV_LENGTHS !DEBUG
+!        CALL MPI_BARRIER(MPI_COMM_SLAVES,MPI_IERR) !DEBUG
+!
+        CALL MPI_ALLTOALLV(SEND_EDGE_DATA,2*SEND_LENGTHS,&
+     &        2*SENDRECV_START_OFFSETS,MPI_REAL,&
+     &        RECV_EDGE_DATA,2*RECV_LENGTHS,&
+     &        2*SENDRECV_START_OFFSETS,MPI_REAL,&
+     &        MPI_COMM_SLAVES,MPI_IERR)
+
+        CALL MPI_ALLTOALLV(SEND_EDGE_DATA_IDX,SEND_LENGTHS,&
+     &        SENDRECV_START_OFFSETS,MPI_INTEGER,&
+     &        RECV_EDGE_DATA_IDX,RECV_LENGTHS,&
+     &        SENDRECV_START_OFFSETS,MPI_INTEGER,&
+     &        MPI_COMM_SLAVES,MPI_IERR)
+
+        DO IG=1,NGRPS
+          DO OFFSET=SENDRECV_START_OFFSETS(IG),&
      &              SENDRECV_START_OFFSETS(IG)+RECV_LENGTHS(IG)-1
             IS = ABS(RECV_EDGE_DATA_IDX(OFFSET+1))
             IF(RECV_EDGE_DATA_IDX(OFFSET+1).LT.0) THEN 
@@ -283,13 +257,11 @@
             RHS(1,INLR1,IELR)=RHS(1,INLR1,IELR)-FLAG*RHSI(1)
             RHS(1,INLR2,IELR)=RHS(1,INLR2,IELR)-FLAG*RHSI(2)
 !            WRITE(50+MPI_RANK_P,"(A9,3I4.1,4I5.1,2ES13.4E2)"),"NEWRECV",&!DEBUG
-!     &         MPI_RANK_P,IG,MPI_RANK_P,INLR1,INLR2,IELR,IS,RHSI   !DEBUG !+1 to compare with old
-
-
-         ENDDO
-      ENDDO
-
+!       &       MPI_RANK_P,IG,MPI_RANK_P,INLR1,INLR2,IELR,IS,RHSI   !DEBUG !+1 to compare with old
+          ENDDO
+        ENDDO
       ENDIF  ! IF(MPI_RANK_P.NE.0)  !kdjfhsewew
+
 ! 
 ! *** FORMAT STATEMENTS 
 ! 

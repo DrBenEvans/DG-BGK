@@ -151,19 +151,20 @@
 !      CALL MPI_BARRIER(MPI_COMM_P,MPI_IERR)
 !
       IF(MPI_RANK_P.NE.0)THEN
-      TAG1=1
-      SIZE1=1
-      TAG2=2
-      SIZE2=NNODE*NELEM_PP
-      CALL MPI_RECV(NPOIN_PP,SIZE1,MPI_INTEGER,0,& 
-     &         TAG1,MPI_COMM_P,MPI_STATUS,MPI_IERR )
-      CALL MPI_RECV(INTMA_PP,SIZE2,MPI_INTEGER,0,& 
-     &         TAG2,MPI_COMM_P,MPI_STATUS,MPI_IERR )
-         TAG3=3
-         SIZE3=maxNPOIN_PP
+         
+        TAG1=1
+        SIZE1=1
+        TAG2=2
+        SIZE2=NNODE*NELEM_PP
+        CALL MPI_RECV(NPOIN_PP,SIZE1,MPI_INTEGER,0,& 
+     &           TAG1,MPI_COMM_P,MPI_STATUS,MPI_IERR )
+        CALL MPI_RECV(INTMA_PP,SIZE2,MPI_INTEGER,0,& 
+     &           TAG2,MPI_COMM_P,MPI_STATUS,MPI_IERR )
+        TAG3=3
+        SIZE3=maxNPOIN_PP
 !
-      CALL MPI_RECV(IPCOM_PP,SIZE3,MPI_INTEGER,0,& 
-     &         TAG3,MPI_COMM_P,MPI_STATUS,MPI_IERR )
+        CALL MPI_RECV(IPCOM_PP,SIZE3,MPI_INTEGER,0,& 
+     &           TAG3,MPI_COMM_P,MPI_STATUS,MPI_IERR )
       ENDIF      !LINKS WITH IF STATEMENT ON LINE 144
 !
 ! *** GET COORD_PP FOR THIS PROCESSOR
@@ -210,157 +211,157 @@
 !
 ! *** NEXT DETERMINE BSIDO_PP AND RSIDO_PP
 !
-        IF(MPI_RANK_P.EQ.0)THEN  ! diescaa
+      IF(MPI_RANK_P.EQ.0)THEN  ! diescaa
         DO 10005 IG=1,NGRPS
-        NELEM_PP=NEGRP(IG)
-      CALL IFILLM(BSIDO_PP,NBNOI,maxNBOUN_PP,CO)
-      CALL RFILLM(RSIDO_PP,NBNOR,maxNBOUN_PP,COO)
-      CALL IFILLV(IBCOM_PP,maxNBOUN_PP,CO)
-            TAG=IG*10
-      CALL MPI_RECV(IPCOM_PP,maxNPOIN_PP,MPI_INTEGER,IG,&
-     &           TAG,MPI_COMM_P,MPI_STATUS,MPI_IERR)
+          NELEM_PP=NEGRP(IG)
+          CALL IFILLM(BSIDO_PP,NBNOI,maxNBOUN_PP,CO)
+          CALL RFILLM(RSIDO_PP,NBNOR,maxNBOUN_PP,COO)
+          CALL IFILLV(IBCOM_PP,maxNBOUN_PP,CO)
+          TAG=IG*10
+          CALL MPI_RECV(IPCOM_PP,maxNPOIN_PP,MPI_INTEGER,IG,&
+     &             TAG,MPI_COMM_P,MPI_STATUS,MPI_IERR)
 !
-! *** LOOP OVER ALL THE BOUNDARY SIDES
+! *** L  OOP OVER ALL THE BOUNDARY SIDES
 !
-        FLAG=0
-        DO 1007 IB=1,NBOUN
-        IE=BSIDO(3,IB)
-        RANK=ELGRP(IE,1)
-        IF(RANK.EQ.IG)THEN
-        FLAG=FLAG+1
-        IF(FLAG.GT.maxNBOUN_PP)THEN
-        WRITE(*,103);WRITE(*,104);STOP
-        ENDIF
-                    NPOIN_PP=NPGRP(IG)
-        DO I=1,NPOIN_PP ! scan for BSIDO(1,IB) om IPCOM_PP
-        IPT=IPCOM_PP(I)
-        IP=BSIDO(1,IB)
-        IF(IP.EQ.IPT)THEN ! found 
-        BSIDO_PP(1,FLAG)=I
-        GOTO 1030
-        ENDIF
-        ENDDO
- 1030   CONTINUE
-        DO I=1,NPOIN_PP  ! scan for BSIDO(1,IB) om IPCOM_PP
-        IPT=IPCOM_PP(I)
-        IP=BSIDO(2,IB)
-        IF(IP.EQ.IPT)THEN ! found
-        BSIDO_PP(2,FLAG)=I
-        GOTO 1031
-        ENDIF
-        ENDDO
- 1031   CONTINUE
-        IEL=BSIDO(3,IB)
-        BSIDO_PP(3,FLAG)=ELGRP(IEL,2)
-        BSIDO_PP(4,FLAG)=BSIDO(4,IB)
-        BSIDO_PP(5,FLAG)=BSIDO(5,IB)
-        BSIDO_PP(6,FLAG)=BSIDO(6,IB)
-        DO I=1,NBNOR
-        RSIDO_PP(I,FLAG)=RSIDO(I,IB)
-        ENDDO
-        IBCOM_PP(FLAG)=IB
-        ENDIF
- 1007   CONTINUE
-        NBOUN_PP=FLAG
+          FLAG=0
+          DO 1007 IB=1,NBOUN
+            IE=BSIDO(3,IB)
+            RANK=ELGRP(IE,1)
+            IF(RANK.EQ.IG)THEN
+            FLAG=FLAG+1
+            IF(FLAG.GT.maxNBOUN_PP)THEN
+            WRITE(*,103);WRITE(*,104);STOP
+            ENDIF
+            NPOIN_PP=NPGRP(IG)
+            DO I=1,NPOIN_PP ! scan for BSIDO(1,IB) om IPCOM_PP
+            IPT=IPCOM_PP(I)
+            IP=BSIDO(1,IB)
+            IF(IP.EQ.IPT)THEN ! found 
+            BSIDO_PP(1,FLAG)=I
+            GOTO 1030
+            ENDIF
+            ENDDO
+ 1030       CONTINUE
+            DO I=1,NPOIN_PP  ! scan for BSIDO(1,IB) om IPCOM_PP
+            IPT=IPCOM_PP(I)
+            IP=BSIDO(2,IB)
+            IF(IP.EQ.IPT)THEN ! found
+            BSIDO_PP(2,FLAG)=I
+            GOTO 1031
+            ENDIF
+            ENDDO
+ 1031       CONTINUE
+            IEL=BSIDO(3,IB)
+            BSIDO_PP(3,FLAG)=ELGRP(IEL,2)
+            BSIDO_PP(4,FLAG)=BSIDO(4,IB)
+            BSIDO_PP(5,FLAG)=BSIDO(5,IB)
+            BSIDO_PP(6,FLAG)=BSIDO(6,IB)
+            DO I=1,NBNOR
+            RSIDO_PP(I,FLAG)=RSIDO(I,IB)
+            ENDDO
+            IBCOM_PP(FLAG)=IB
+            ENDIF
+ 1007     CONTINUE
+          NBOUN_PP=FLAG
 !
-! *** MPI COMMAND TO SEND NBOUN_PP,BSIDO_PP,RSIDO_PP AND IBCOM_PP TO PROCESSOR RANK IR !!!!!!!
+! *** M  PI COMMAND TO SEND NBOUN_PP,BSIDO_PP,RSIDO_PP AND IBCOM_PP TO PROCESSOR RANK IR !!!!!!!
 !
-        TAG5=5
-        SIZE5=1
-        TAG6=6
-        SIZE6=NBNOI*maxNBOUN_PP
-        TAG7=7
-        SIZE7=NBNOR*maxNBOUN_PP
-        TAG8=8
-        SIZE8=maxNBOUN_PP
-        CALL MPI_SEND(NBOUN_PP,SIZE5,MPI_INTEGER,IG,& 
-     &         TAG5,MPI_COMM_P,MPI_IERR)
-        CALL MPI_SEND(BSIDO_PP,SIZE6,MPI_INTEGER,IG,& 
-     &         TAG6,MPI_COMM_P,MPI_IERR)
-        CALL MPI_SEND(RSIDO_PP,SIZE7,MPI_REAL,IG,&
-     &   TAG7,MPI_COMM_P,MPI_IERR) 
-        CALL MPI_SEND(IBCOM_PP,SIZE8,MPI_INTEGER,IG,&
-     &   TAG8,MPI_COMM_P,MPI_IERR)
-10005    CONTINUE
-          ENDIF    ! IF(MPI_RANK_P.EQ.0)THEN  ! diescaa
-!
-       IF(MPI_RANK_P.NE.0)THEN  !dsjkhadfxx
-            TAG=MPI_RANK_P*10
-        CALL MPI_SEND(IPCOM_PP,maxNPOIN_PP,MPI_INTEGER,&
-     &   0,TAG,MPI_COMM_P,MPI_IERR)
-         TAG5=5
-         SIZE5=1
-         CALL MPI_RECV(NBOUN_PP,SIZE5,MPI_INTEGER,0,& 
-     &         TAG5,MPI_COMM_P,MPI_STATUS,MPI_IERR )
+          TAG5=5
+          SIZE5=1
           TAG6=6
           SIZE6=NBNOI*maxNBOUN_PP
-         CALL MPI_RECV(BSIDO_PP,SIZE6,MPI_INTEGER,0,&
-     &    TAG6,MPI_COMM_P,MPI_STATUS,MPI_IERR)
           TAG7=7
           SIZE7=NBNOR*maxNBOUN_PP
-          CALL MPI_RECV(RSIDO_PP,SIZE7,MPI_REAL,0,&
-     &    TAG7,MPI_COMM_P,MPI_STATUS,MPI_IERR)
           TAG8=8
           SIZE8=maxNBOUN_PP
-          CALL MPI_RECV(IBCOM_PP,SIZE8,MPI_INTEGER,0,&
+          CALL MPI_SEND(NBOUN_PP,SIZE5,MPI_INTEGER,IG,& 
+     &           TAG5,MPI_COMM_P,MPI_IERR)
+          CALL MPI_SEND(BSIDO_PP,SIZE6,MPI_INTEGER,IG,& 
+     &           TAG6,MPI_COMM_P,MPI_IERR)
+          CALL MPI_SEND(RSIDO_PP,SIZE7,MPI_REAL,IG,&
+     &           TAG7,MPI_COMM_P,MPI_IERR) 
+          CALL MPI_SEND(IBCOM_PP,SIZE8,MPI_INTEGER,IG,&
+     &           TAG8,MPI_COMM_P,MPI_IERR)
+10005   CONTINUE
+      ENDIF    ! IF(MPI_RANK_P.EQ.0)THEN  ! diescaa
+!
+      IF(MPI_RANK_P.NE.0)THEN  !dsjkhadfxx
+        TAG=MPI_RANK_P*10
+        CALL MPI_SEND(IPCOM_PP,maxNPOIN_PP,MPI_INTEGER,&
+     &    0,TAG,MPI_COMM_P,MPI_IERR)
+        TAG5=5
+        SIZE5=1
+        CALL MPI_RECV(NBOUN_PP,SIZE5,MPI_INTEGER,0,& 
+     &   TAG5,MPI_COMM_P,MPI_STATUS,MPI_IERR )
+        TAG6=6
+        SIZE6=NBNOI*maxNBOUN_PP
+        CALL MPI_RECV(BSIDO_PP,SIZE6,MPI_INTEGER,0,&
+     &    TAG6,MPI_COMM_P,MPI_STATUS,MPI_IERR)
+        TAG7=7
+        SIZE7=NBNOR*maxNBOUN_PP
+        CALL MPI_RECV(RSIDO_PP,SIZE7,MPI_REAL,0,&
+     &    TAG7,MPI_COMM_P,MPI_STATUS,MPI_IERR)
+        TAG8=8
+        SIZE8=maxNBOUN_PP
+        CALL MPI_RECV(IBCOM_PP,SIZE8,MPI_INTEGER,0,&
      &     TAG8,MPI_COMM_P,MPI_STATUS,MPI_IERR)
       ENDIF  ! IF(MPI_RANK_P.NE.0)THEN  !dsjkhadfxx
 !
 ! *** NEXT DETERMINE GEOME_PP,MMAT_PP,CMMAT_PP
 !
-       CALL MPI_BARRIER(MPI_COMM_P,MPI_IERR)
-       IF(MPI_RANK_P.EQ.0)THEN ! jdhdcaaaaaa
-       DO 10007 IG=1,NGRPS
-        NELEM_PP=NEGRP(IG)
+      CALL MPI_BARRIER(MPI_COMM_P,MPI_IERR)
+
+      IF(MPI_RANK_P.EQ.0)THEN ! jdhdcaaaaaa
+        DO 10007 IG=1,NGRPS
+          NELEM_PP=NEGRP(IG)
 !
-       CALL RFILLM(GEOME_PP,NGEOM,maxNELEM_PP,COO)
-       CALL RFILLM(MMAT_PP,NNODE,maxNELEM_PP,COO)
-       CALL RFILLA(CMMAT_PP,3,3,maxNELEM_PP,COO)
+          CALL RFILLM(GEOME_PP,NGEOM,maxNELEM_PP,COO)
+          CALL RFILLM(MMAT_PP,NNODE,maxNELEM_PP,COO)
+          CALL RFILLA(CMMAT_PP,3,3,maxNELEM_PP,COO)
 !
-        DO 1008 IE=1,NELEM
-         RANK=ELGRP(IE,1)
-         IEG=ELGRP(IE,2)
-         IF(RANK.EQ.IG)THEN
-        DO I=1,NGEOM
-        GEOME_PP(I,IEG)=GEOME(I,IE)
-        ENDDO
-        IF(IMMAT.EQ.1)THEN
-        DO I=1,NNODE
-         MMAT_PP(I,IEG)=MMAT(I,IE)
-        ENDDO
-        ELSE
-         DO I=1,3
-         DO J=1,3
-          CMMAT_PP(I,J,IEG)=CMMAT(I,J,IE)
-         ENDDO
-        ENDDO
-      ENDIF      
-      ENDIF
- 1008 CONTINUE
+          DO 1008 IE=1,NELEM 
+            RANK=ELGRP(IE,1)
+            IEG=ELGRP(IE,2)
+            IF(RANK.EQ.IG)THEN
+              DO I=1,NGEOM
+                GEOME_PP(I,IEG)=GEOME(I,IE)
+              ENDDO
+              IF(IMMAT.EQ.1)THEN
+                DO I=1,NNODE
+                  MMAT_PP(I,IEG)=MMAT(I,IE)
+                ENDDO
+              ELSE
+                DO I=1,3
+                  DO J=1,3
+                   CMMAT_PP(I,J,IEG)=CMMAT(I,J,IE)
+                  ENDDO
+                ENDDO
+              ENDIF      
+            ENDIF
+ 1008     CONTINUE
 !
-! *** MPI COMMAND TO SEND GEOME_PP,MMAT_PP AND CMMAT_PP TO PROCESSOR RANK IG !!!
+! ***     MPI COMMAND TO SEND GEOME_PP,MMAT_PP AND CMMAT_PP TO PROCESSOR RANK IG !!!
 !
-      TAG9=9
-      NELEM_PP=NEGRP(IG)
-      SIZE9=NGEOM*maxNELEM_PP
-      CALL MPI_SEND(GEOME_PP,SIZE9,MPI_REAL,IG,& 
-     &         TAG9,MPI_COMM_P,MPI_IERR)
-          IF(IMMAT.EQ.1)THEN
-            TAG10=10
-      SIZE10=maxNELEM_PP*NNODE
-      CALL MPI_SEND(MMAT_PP,SIZE10,MPI_REAL,IG,&
-     &      TAG10,MPI_COMM_P,MPI_IERR)
-          ELSE
-          TAG10=10
-          SIZE10=3*3*maxNELEM_PP
-        CALL MPI_SEND(CMMAT_PP,SIZE10,MPI_REAL,IG,&
-     &       TAG10,MPI_COMM_P,MPI_IERR)
+          TAG9=9
+          NELEM_PP=NEGRP(IG)
+          SIZE9=NGEOM*maxNELEM_PP
+          CALL MPI_SEND(GEOME_PP,SIZE9,MPI_REAL,IG,& 
+     &             TAG9,MPI_COMM_P,MPI_IERR)
+              IF(IMMAT.EQ.1)THEN
+                TAG10=10
+          SIZE10=maxNELEM_PP*NNODE
+          CALL MPI_SEND(MMAT_PP,SIZE10,MPI_REAL,IG,&
+     &          TAG10,MPI_COMM_P,MPI_IERR)
+              ELSE
+              TAG10=10
+              SIZE10=3*3*maxNELEM_PP
+            CALL MPI_SEND(CMMAT_PP,SIZE10,MPI_REAL,IG,&
+     &           TAG10,MPI_COMM_P,MPI_IERR)
           ENDIF
-!
 10007   CONTINUE
-        ENDIF       ! IF(MPI_RANK_P.EQ.0)THEN ! jdhdcaaaaaa
+      ENDIF       ! IF(MPI_RANK_P.EQ.0)THEN ! jdhdcaaaaaa
 !
-       IF(MPI_RANK_P.NE.0)THEN !cncsskdjhfsdf
+      IF(MPI_RANK_P.NE.0)THEN !cncsskdjhfsdf
         CALL RFILLM(GEOME_PP,NGEOM,maxNELEM_PP,COO)
         CALL RFILLM(MMAT_PP,NNODE,maxNELEM_PP,COO)
         CALL RFILLA(CMMAT_PP,3,3,maxNELEM_PP,COO)
@@ -369,38 +370,38 @@
         CALL MPI_RECV(GEOME_PP,SIZE9,MPI_REAL,0,&
      &       TAG9,MPI_COMM_P,MPI_STATUS,MPI_IERR)
         IF(IMMAT.EQ.1)THEN 
-        TAG10=10
-        SIZE10=maxNELEM_PP*NNODE
-        CALL MPI_RECV(MMAT_PP,SIZE10,MPI_REAL,0,&
-     &         TAG10,MPI_COMM_P,MPI_STATUS,MPI_IERR)
-      ELSE
-        TAG10=10
-        SIZE10=3*3*maxNELEM_PP
-        CALL MPI_RECV(CMMAT_PP,SIZE10,MPI_REAL,0,&
-     &      TAG10,MPI_COMM_P,MPI_STATUS,MPI_IERR)
-         ENDIF
-!
-         ENDIF    ! IF(MPI_RANK_P.NE.0)THEN !cncsskdjhfsdf
+          TAG10=10
+          SIZE10=maxNELEM_PP*NNODE
+          CALL MPI_RECV(MMAT_PP,SIZE10,MPI_REAL,0,&
+     &           TAG10,MPI_COMM_P,MPI_STATUS,MPI_IERR)
+        ELSE
+          TAG10=10
+          SIZE10=3*3*maxNELEM_PP
+          CALL MPI_RECV(CMMAT_PP,SIZE10,MPI_REAL,0,&
+     &        TAG10,MPI_COMM_P,MPI_STATUS,MPI_IERR)
+        ENDIF
+      ENDIF    ! IF(MPI_RANK_P.NE.0)THEN !cncsskdjhfsdf
+
 !
 ! *** NEXT DETERMINE ISIDE_PP,NX_PP,NY_PP,EL_PP AND ISCOM_PP
 !
-        IF(MPI_RANK_P.EQ.0)THEN !xvmnsdnmbfa
-      DO 10009 IG=1,NGRPS
-                CALL IFILLM(ISIDE_PP,8,maxNSIDE_PP,CO)
-                CALL RFILLV(NX_PP,maxNSIDE_PP,COO)
-                CALL RFILLV(NY_PP,maxNSIDE_PP,COO)
-                CALL RFILLV(EL_PP,maxNSIDE_PP,COO)
-                CALL IFILLV(ISCOM_PP,maxNSIDE_PP,CO)
-                CALL IFILLV(LCOMM_PP,maxNSIDE_PP,CO)
-            TAG=IG*10
-                CALL MPI_RECV(IPCOM_PP,maxNPOIN_PP,MPI_INTEGER,IG,&
+      IF(MPI_RANK_P.EQ.0)THEN !xvmnsdnmbfa
+        DO 10009 IG=1,NGRPS
+          CALL IFILLM(ISIDE_PP,8,maxNSIDE_PP,CO)
+          CALL RFILLV(NX_PP,maxNSIDE_PP,COO)
+          CALL RFILLV(NY_PP,maxNSIDE_PP,COO)
+          CALL RFILLV(EL_PP,maxNSIDE_PP,COO)
+          CALL IFILLV(ISCOM_PP,maxNSIDE_PP,CO)
+          CALL IFILLV(LCOMM_PP,maxNSIDE_PP,CO)
+          TAG=IG*10
+          CALL MPI_RECV(IPCOM_PP,maxNPOIN_PP,MPI_INTEGER,IG,&
      &           TAG,MPI_COMM_P,MPI_STATUS,MPI_IERR)
 !
-! *** LOOP OVER THE ELEMENT EDGES
+! ***     LOOP OVER THE ELEMENT EDGES
 !
-            FLAG=0
-            NCOMM_PP=0
-            DO 1009 IS=1,NSIDE
+          FLAG=0
+          NCOMM_PP=0
+          DO 1009 IS=1,NSIDE
             IEL=ISIDE(3,IS)
             IER=ISIDE(4,IS)
             IF(IEL.EQ.0)THEN ! This should not happen...
@@ -414,276 +415,222 @@
             RANKR=ELGRP(IER,1)
  1101       CONTINUE
 !
-            IF((RANKL.EQ.IG).AND.&
-     &    (RANKR.EQ.IG))THEN!SIDE IS NOT AT A P-SPACE DOMAIN BOUNDARY
-            FLAG=FLAG+1
-            IF(FLAG.GT.maxNSIDE_PP)THEN
-            WRITE(*,105)
-            WRITE(*,106)
-            STOP
-            ENDIF   !OR AT A PROCESSOR DOMAIN BOUNDARY
-            ISCOM_PP(FLAG)=IS    !FILL IN ISCOM_PP
-            IP1=ISIDE(1,IS)
-            DO 1010 I=1,maxNPOIN_PP
-            IPT=IPCOM_PP(I)
-            IF(IPT.EQ.IP1)THEN
-            ISIDE_PP(1,FLAG)=I    !FILL IN ISIDE_PP(1,*)
-            GOTO 1011
-            ENDIF
- 1010       CONTINUE
- 1011       CONTINUE
-            IP2=ISIDE(2,IS)
-            DO 1012 I=1,maxNPOIN_PP
-            IPT=IPCOM_PP(I)
-            IF(IPT.EQ.IP2)THEN
-            ISIDE_PP(2,FLAG)=I     !FILL IN ISIDE_PP(2,*)
-            GOTO 1013
-            ENDIF
- 1012       CONTINUE
- 1013       CONTINUE
-            ISIDE_PP(3,FLAG)=ELGRP(IEL,2)    !FILL IN ISIDE_PP(3,*)
-            ISIDE_PP(4,FLAG)=ELGRP(IER,2)    !FILL IN ISIDE_PP(4,*)
-            DO I=5,8
-            ISIDE_PP(I,FLAG)=ISIDE(I,IS)!FILL IN ISIDE_PP(5,_) ->> ISIDE(8,*)
-            ENDDO       
+            IF((RANKL.EQ.IG).AND.(RANKR.EQ.IG))THEN!SIDE IS NOT AT A P-SPACE DOMAIN BOUNDARY
+              FLAG=FLAG+1
+              IF(FLAG.GT.maxNSIDE_PP)THEN
+                WRITE(*,105)
+                WRITE(*,106)
+                STOP
+              ENDIF   !OR AT A PROCESSOR DOMAIN BOUNDARY
+              ISCOM_PP(FLAG)=IS    !FILL IN ISCOM_PP
+              IP1=ISIDE(1,IS)
+              DO 1010 I=1,maxNPOIN_PP
+                IPT=IPCOM_PP(I)
+                IF(IPT.EQ.IP1)THEN
+                  ISIDE_PP(1,FLAG)=I    !FILL IN ISIDE_PP(1,*)
+                  GOTO 1011
+                ENDIF
+ 1010         CONTINUE
+ 1011         CONTINUE
+              IP2=ISIDE(2,IS)
+              DO 1012 I=1,maxNPOIN_PP
+                IPT=IPCOM_PP(I)
+                IF(IPT.EQ.IP2)THEN
+                  ISIDE_PP(2,FLAG)=I     !FILL IN ISIDE_PP(2,*)
+                  GOTO 1013
+                ENDIF
+ 1012         CONTINUE
+ 1013         CONTINUE
+              ISIDE_PP(3,FLAG)=ELGRP(IEL,2)    !FILL IN ISIDE_PP(3,*)
+              ISIDE_PP(4,FLAG)=ELGRP(IER,2)    !FILL IN ISIDE_PP(4,*)
+              DO I=5,8
+                ISIDE_PP(I,FLAG)=ISIDE(I,IS)!FILL IN ISIDE_PP(5,_) ->> ISIDE(8,*)
+              ENDDO       
 !
-! *** FILL IN NX_PP,NY_PP,EL_PP
+! *** FILL   IN NX_PP,NY_PP,EL_PP
 !
-            NX_PP(FLAG)=NX(IS)
-            NY_PP(FLAG)=NY(IS)
-            EL_PP(FLAG)=EL(IS)
-            ELSEIF((RANKL.EQ.IG).AND.&
-     &        (RANKR.NE.IG).AND.(RANKR.NE.-1))THEN
-            NCOMM_PP=NCOMM_PP+1
-            FLAG=FLAG+1
-            IF(FLAG.GT.maxNSIDE_PP)THEN
-            WRITE(*,105)
-            WRITE(*,106)
-            STOP
-            ENDIF      !SIDE IS AT A PROCESSOR DOMAIN BOUNDARY
-            ISCOM_PP(FLAG)=IS
-            LCOMM_PP(FLAG)=RANKR
-            IP1=ISIDE(1,IS)     !RHS ELEMENT IN OTHER PROCESSOR DOMAIN
-            DO 1014 I=1,maxNPOIN_PP
-            IPT=IPCOM_PP(I)
-            IF(IPT.EQ.IP1)THEN
-            ISIDE_PP(1,FLAG)=I     !FILL IN ISIDE_PP(1,*)
-            GOTO 1015
-            ENDIF
- 1014       CONTINUE
- 1015       CONTINUE
-            IP2=ISIDE(2,IS)
-            DO 1016 I=1,maxNPOIN_PP
-            IPT=IPCOM_PP(I)
-            IF(IPT.EQ.IP2)THEN
-            ISIDE_PP(2,FLAG)=I      !FILL IN ISIDE_PP(2,*)
-            GOTO 1017
-            ENDIF
- 1016       CONTINUE
- 1017       CONTINUE
-            ISIDE_PP(3,FLAG)=ELGRP(IEL,2)    !FILL IN ISIDE_PP(3,*)
-            ISIDE_PP(4,FLAG)=-1              !FILL IN ISIDE_PP(4,*)
-            DO I=5,6
-            ISIDE_PP(I,FLAG)=ISIDE(I,IS)  !FILL IN ISIDE_PP(5,_) ->> ISIDE(8,*)
-            ENDDO
-            DO I=7,8
-            ISIDE_PP(I,FLAG)=-1
-            ENDDO
+              NX_PP(FLAG)=NX(IS)
+              NY_PP(FLAG)=NY(IS)
+              EL_PP(FLAG)=EL(IS)
+            ELSEIF((RANKL.EQ.IG).AND.(RANKR.NE.IG).AND.(RANKR.NE.-1))THEN
+              NCOMM_PP=NCOMM_PP+1
+              FLAG=FLAG+1
+              IF(FLAG.GT.maxNSIDE_PP)THEN
+                WRITE(*,105)
+                WRITE(*,106)
+                STOP
+              ENDIF      !SIDE IS AT A PROCESSOR DOMAIN BOUNDARY
+              ISCOM_PP(FLAG)=IS
+              LCOMM_PP(FLAG)=RANKR
+              IP1=ISIDE(1,IS)     !RHS ELEMENT IN OTHER PROCESSOR DOMAIN
+              DO 1014 I=1,maxNPOIN_PP
+                IPT=IPCOM_PP(I)
+                IF(IPT.EQ.IP1)THEN
+                  ISIDE_PP(1,FLAG)=I     !FILL IN ISIDE_PP(1,*)
+                  GOTO 1015
+                ENDIF
+ 1014         CONTINUE
+ 1015         CONTINUE
+              IP2=ISIDE(2,IS)
+              DO 1016 I=1,maxNPOIN_PP
+                IPT=IPCOM_PP(I)
+                IF(IPT.EQ.IP2)THEN
+                  ISIDE_PP(2,FLAG)=I      !FILL IN ISIDE_PP(2,*)
+                  GOTO 1017
+                ENDIF
+ 1016         CONTINUE
+ 1017         CONTINUE
+              ISIDE_PP(3,FLAG)=ELGRP(IEL,2)    !FILL IN ISIDE_PP(3,*)
+              ISIDE_PP(4,FLAG)=-1              !FILL IN ISIDE_PP(4,*)
+              DO I=5,6
+                ISIDE_PP(I,FLAG)=ISIDE(I,IS)  !FILL IN ISIDE_PP(5,_) ->> ISIDE(8,*)
+              ENDDO
+              DO I=7,8
+                ISIDE_PP(I,FLAG)=-1
+              ENDDO
 !
-! *** FILL IN NX_PP,NY_PP,EL_PP
+! *** FILL   IN NX_PP,NY_PP,EL_PP
 !
-            NX_PP(FLAG)=NX(IS)
-            NY_PP(FLAG)=NY(IS)
-            EL_PP(FLAG)=EL(IS)
-            ELSEIF((RANKR.EQ.IG).AND.(RANKL.NE.IG)&
-     &   .AND.(RANKL.NE.-1))THEN
-            FLAG=FLAG+1
-            NCOMM_PP=NCOMM_PP+1
-            IF(FLAG.GT.maxNSIDE_PP)THEN
-            WRITE(*,105)
-            WRITE(*,106)
-            STOP
-            ENDIF      !SIDE IS AT A PROCESSOR DOMAIN BOUNDARY
-            ISCOM_PP(FLAG)=IS
-            LCOMM_PP(FLAG)=RANKL
-            IP1=ISIDE(1,IS)    !LHS ELEMENT IN OTHER PROCESSOR DOMAIN
-            DO 1018 I=1,maxNPOIN_PP
-            IPT=IPCOM_PP(I)
-            IF(IPT.EQ.IP1)THEN
-            ISIDE_PP(1,FLAG)=I    !FILL IN ISIDE_PP(1,*)
-            GOTO 1019
-            ENDIF
- 1018       CONTINUE
- 1019       CONTINUE
-            IP2=ISIDE(2,IS)
-            DO 1020 I=1,maxNPOIN_PP
-            IPT=IPCOM_PP(I)
-            IF(IPT.EQ.IP2)THEN
-            ISIDE_PP(2,FLAG)=I    !FILL IN ISIDE_PP(2,*)
-            GOTO 1021
-            ENDIF
- 1020       CONTINUE
- 1021       CONTINUE
-            ISIDE_PP(3,FLAG)=-1    !FILL IN ISIDE_PP(3,*)
-            ISIDE_PP(4,FLAG)=ELGRP(IER,2)    !FILL IN ISIDE_PP(4,*)
-            DO I=5,6
-            ISIDE_PP(I,FLAG)=-1   !FILL IN ISIDE_PP(5,_) ->> ISIDE(8,*)
-            ENDDO
-            DO I=7,8
-            ISIDE_PP(I,FLAG)=ISIDE(I,IS)
-            ENDDO
+              NX_PP(FLAG)=NX(IS)
+              NY_PP(FLAG)=NY(IS)
+              EL_PP(FLAG)=EL(IS)
+            ELSEIF((RANKR.EQ.IG).AND.(RANKL.NE.IG).AND.(RANKL.NE.-1))THEN
+              FLAG=FLAG+1
+              NCOMM_PP=NCOMM_PP+1
+              IF(FLAG.GT.maxNSIDE_PP)THEN
+                WRITE(*,105)
+                WRITE(*,106)
+                STOP
+              ENDIF      !SIDE IS AT A PROCESSOR DOMAIN BOUNDARY
+              ISCOM_PP(FLAG)=IS
+              LCOMM_PP(FLAG)=RANKL
+              IP1=ISIDE(1,IS)    !LHS ELEMENT IN OTHER PROCESSOR DOMAIN
+              DO 1018 I=1,maxNPOIN_PP
+                IPT=IPCOM_PP(I)
+                IF(IPT.EQ.IP1)THEN
+                  ISIDE_PP(1,FLAG)=I    !FILL IN ISIDE_PP(1,*)
+                  GOTO 1019
+                ENDIF
+ 1018         CONTINUE
+ 1019         CONTINUE
+              IP2=ISIDE(2,IS)
+              DO 1020 I=1,maxNPOIN_PP
+                IPT=IPCOM_PP(I)
+                IF(IPT.EQ.IP2)THEN
+                  ISIDE_PP(2,FLAG)=I    !FILL IN ISIDE_PP(2,*)
+                  GOTO 1021
+                ENDIF
+ 1020         CONTINUE
+ 1021         CONTINUE
+              ISIDE_PP(3,FLAG)=-1    !FILL IN ISIDE_PP(3,*)
+              ISIDE_PP(4,FLAG)=ELGRP(IER,2)    !FILL IN ISIDE_PP(4,*)
+              DO I=5,6
+                ISIDE_PP(I,FLAG)=-1   !FILL IN ISIDE_PP(5,_) ->> ISIDE(8,*)
+              ENDDO
+              DO I=7,8
+                ISIDE_PP(I,FLAG)=ISIDE(I,IS)
+              ENDDO
 !
-! *** FILL IN NX_PP,NY_PP,EL_PP
+! *** FILL   IN NX_PP,NY_PP,EL_PP
 !
-            NX_PP(FLAG)=NX(IS)
-            NY_PP(FLAG)=NY(IS)
-            EL_PP(FLAG)=EL(IS)
+              NX_PP(FLAG)=NX(IS)
+              NY_PP(FLAG)=NY(IS)
+              EL_PP(FLAG)=EL(IS)
             ELSEIF((RANKL.EQ.IG).AND.(RANKR.EQ.-1))THEN
-            FLAG=FLAG+1
-            IF(FLAG.GT.maxNSIDE_PP)THEN
-            WRITE(*,105)
-            WRITE(*,106)
-            STOP
-            ENDIF    !SIDE IS AT A P-SPACE DOMAIN BOUNDARY
-            ISCOM_PP(FLAG)=IS
-            IP1=ISIDE(1,IS)   !RHS ELEMENT OUTSIDE DOMAIN
-            DO 1022 I=1,maxNPOIN_PP
-            IPT=IPCOM_PP(I)
-            IF(IPT.EQ.IP1)THEN
-            ISIDE_PP(1,FLAG)=I    !FILL IN ISIDE_PP(1,*)
-            GOTO 1023
+              FLAG=FLAG+1
+              IF(FLAG.GT.maxNSIDE_PP)THEN
+                WRITE(*,105)
+                WRITE(*,106)
+                STOP
+              ENDIF    !SIDE IS AT A P-SPACE DOMAIN BOUNDARY
+              ISCOM_PP(FLAG)=IS
+              IP1=ISIDE(1,IS)   !RHS ELEMENT OUTSIDE DOMAIN
+              DO 1022 I=1,maxNPOIN_PP
+                IPT=IPCOM_PP(I)
+                IF(IPT.EQ.IP1)THEN
+                  ISIDE_PP(1,FLAG)=I    !FILL IN ISIDE_PP(1,*)
+                  GOTO 1023
+                ENDIF
+ 1022         CONTINUE
+ 1023         CONTINUE
+              IP2=ISIDE(2,IS)
+              DO 1024 I=1,maxNPOIN_PP
+                IPT=IPCOM_PP(I)
+                IF(IPT.EQ.IP2)THEN
+                  ISIDE_PP(2,FLAG)=I      !FILL IN ISIDE_PP(2,*)
+                  GOTO 1025
+                ENDIF
+ 1024         CONTINUE
+ 1025         CONTINUE
+              ISIDE_PP(3,FLAG)=ELGRP(IEL,2)    !FILL IN ISIDE_PP(3,*)
+              ISIDE_PP(4,FLAG)=0               !FILL IN ISIDE_PP(4,*)
+              DO I=5,6
+                ISIDE_PP(I,FLAG)=ISIDE(I,IS)     !FILL IN ISIDE_PP(5,_) ->> ISIDE(8,*)
+              ENDDO
+              DO I=7,8
+                ISIDE_PP(I,FLAG)=0
+              ENDDO
+!
+! *** FILL   IN NX_PP,NY_PP,EL_PP
+!
+              NX_PP(FLAG)=NX(IS)
+              NY_PP(FLAG)=NY(IS)
+              EL_PP(FLAG)=EL(IS)
+            ELSEIF((RANKL.EQ.-1).AND.(RANKR.EQ.IG))THEN
+              FLAG=FLAG+1
+              IF(FLAG.GT.maxNSIDE_PP)THEN
+                WRITE(*,105)
+                WRITE(*,106)
+                STOP
+              ENDIF    !SIDE IS AT A P-SPACE DOMAIN BOUNDARY
+              ISCOM_PP(FLAG)=IS
+              IP1=ISIDE(1,IS)    !LHS ELEMENT OUTSIDE DOMAIN
+              DO 1026 I=1,maxNPOIN_PP
+                IPT=IPCOM_PP(I)
+                IF(IPT.EQ.IP1)THEN
+                  ISIDE_PP(1,FLAG)=I   !FILL IN ISIDE_PP(1,*)
+                  GOTO 1027
+                ENDIF
+ 1026         CONTINUE
+ 1027         CONTINUE
+              IP2=ISIDE(2,IS)
+              DO 1028 I=1,maxNPOIN_PP
+                IPT=IPCOM_PP(I)
+                IF(IPT.EQ.IP2)THEN
+                  ISIDE_PP(2,FLAG)=I    !FILL IN ISIDE_PP(2,*)
+                  GOTO 1029
+                ENDIF
+ 1028         CONTINUE
+ 1029         CONTINUE
+              ISIDE_PP(3,FLAG)=0    !FILL IN ISIDE_PP(3,*)
+              ISIDE_PP(4,FLAG)=ELGRP(IER,2)   !FILL IN ISIDE_PP(4,*)
+              DO I=5,6
+                ISIDE_PP(I,FLAG)=0    !FILL IN ISIDE_PP(5,_) ->> ISIDE(8,*)
+              ENDDO
+              DO I=7,8
+                ISIDE_PP(I,FLAG)=ISIDE(I,IS)
+              ENDDO
+! 	          		
+! ***         FILL   IN NX_PP,NY_PP,EL_PP
+!
+              NX_PP(FLAG)=NX(IS)
+              NY_PP(FLAG)=NY(IS)
+              EL_PP(FLAG)=EL(IS)
             ENDIF
- 1022       CONTINUE
- 1023       CONTINUE
-            IP2=ISIDE(2,IS)
-            DO 1024 I=1,maxNPOIN_PP
-            IPT=IPCOM_PP(I)
-            IF(IPT.EQ.IP2)THEN
-            ISIDE_PP(2,FLAG)=I      !FILL IN ISIDE_PP(2,*)
-            GOTO 1025
-            ENDIF
- 1024       CONTINUE
- 1025       CONTINUE
-            ISIDE_PP(3,FLAG)=ELGRP(IEL,2)    !FILL IN ISIDE_PP(3,*)
-            ISIDE_PP(4,FLAG)=0               !FILL IN ISIDE_PP(4,*)
-            DO I=5,6
-            ISIDE_PP(I,FLAG)=ISIDE(I,IS)     !FILL IN ISIDE_PP(5,_) ->> ISIDE(8,*)
-            ENDDO
-            DO I=7,8
-            ISIDE_PP(I,FLAG)=0
-            ENDDO
+! ***     END LOOP OVER SIDES
+ 1009     CONTINUE
+          NSIDE_PP=FLAG
 !
-! *** FILL IN NX_PP,NY_PP,EL_PP
+! ***     MPI COMMAND TO SEND NSIDE_PP,NX_PP,NY_PP,EL_PP,ISIDE_PP AND ISCOM_PP TO PROCESSOR RANK IG!!!!!!!!!!!!!
 !
-            NX_PP(FLAG)=NX(IS)
-            NY_PP(FLAG)=NY(IS)
-            EL_PP(FLAG)=EL(IS)
-            ELSEIF((RANKL.EQ.-1).AND.&
-     & (RANKR.EQ.IG))THEN
-            FLAG=FLAG+1
-            IF(FLAG.GT.maxNSIDE_PP)THEN
-            WRITE(*,105)
-            WRITE(*,106)
-            STOP
-            ENDIF    !SIDE IS AT A P-SPACE DOMAIN BOUNDARY
-            ISCOM_PP(FLAG)=IS
-            IP1=ISIDE(1,IS)    !LHS ELEMENT OUTSIDE DOMAIN
-            DO 1026 I=1,maxNPOIN_PP
-            IPT=IPCOM_PP(I)
-            IF(IPT.EQ.IP1)THEN
-            ISIDE_PP(1,FLAG)=I   !FILL IN ISIDE_PP(1,*)
-            GOTO 1027
-            ENDIF
- 1026       CONTINUE
- 1027       CONTINUE
-            IP2=ISIDE(2,IS)
-            DO 1028 I=1,maxNPOIN_PP
-            IPT=IPCOM_PP(I)
-            IF(IPT.EQ.IP2)THEN
-            ISIDE_PP(2,FLAG)=I    !FILL IN ISIDE_PP(2,*)
-            GOTO 1029
-            ENDIF
- 1028       CONTINUE
- 1029       CONTINUE
-            ISIDE_PP(3,FLAG)=0    !FILL IN ISIDE_PP(3,*)
-            ISIDE_PP(4,FLAG)=ELGRP(IER,2)   !FILL IN ISIDE_PP(4,*)
-            DO I=5,6
-            ISIDE_PP(I,FLAG)=0    !FILL IN ISIDE_PP(5,_) ->> ISIDE(8,*)
-            ENDDO
-            DO I=7,8
-            ISIDE_PP(I,FLAG)=ISIDE(I,IS)
-            ENDDO
-! 				
-! *** FILL IN NX_PP,NY_PP,EL_PP
-!
-           NX_PP(FLAG)=NX(IS)
-           NY_PP(FLAG)=NY(IS)
-           EL_PP(FLAG)=EL(IS)
-           ENDIF
-!
-! *** END LOOP OVER SIDES
-!
- 1009 CONTINUE
-        NSIDE_PP=FLAG
-!
-! *** MPI COMMAND TO SEND NSIDE_PP,NX_PP,NY_PP,EL_PP,ISIDE_PP AND ISCOM_PP TO PROCESSOR RANK IG!!!!!!!!!!!!!
-!
-      TAG11=11
-      SIZE11=1
-      TAG12=12
-      SIZE12=maxNSIDE_PP
-      TAG13=13
-      SIZE13=maxNSIDE_PP
-      TAG14=14
-      SIZE14=maxNSIDE_PP
-      TAG15=15
-      SIZE15=8*maxNSIDE_PP
-      TAG16=16
-      SIZE16=maxNSIDE_PP
-      TAG17=17
-      SIZE17=maxNSIDE_PP
-      TAG18=18
-      SIZE18=1
-      CALL MPI_SEND(NSIDE_PP,SIZE11,MPI_INTEGER,IG,&
-     &   TAG11,MPI_COMM_P,MPI_IERR)   
-      CALL MPI_SEND(NX_PP,SIZE12,MPI_REAL,IG,&
-     &   TAG12,MPI_COMM_P,MPI_IERR)  
-      CALL MPI_SEND(NY_PP,SIZE13,MPI_REAL,IG,&
-     &    TAG13,MPI_COMM_P,MPI_IERR)
-      CALL MPI_SEND(EL_PP,SIZE14,MPI_REAL,IG,&
-     &    TAG14,MPI_COMM_P,MPI_IERR)
-      CALL MPI_SEND(ISIDE_PP,SIZE15,MPI_INTEGER,IG,&
-     & TAG15,MPI_COMM_P,MPI_IERR)
-      CALL MPI_SEND(ISCOM_PP,SIZE16,MPI_INTEGER,IG,&
-     &     TAG16,MPI_COMM_P,MPI_IERR)
-      CALL MPI_SEND(LCOMM_PP,SIZE17,MPI_INTEGER,IG,&
-     &     TAG17,MPI_COMM_P,MPI_IERR)
-      CALL MPI_SEND(NCOMM_PP,SIZE18,MPI_INTEGER,IG,&
-     &     TAG18,MPI_COMM_P,MPI_IERR)
-
-10009     CONTINUE
-          ENDIF   !IF(MPI_RANK_P.EQ.0)THEN !xvmnsdnmbfa
-!
-          IF(MPI_RANK_P.NE.0)THEN !ddpddpddpd
-          TAG=MPI_RANK_P*10
-      CALL MPI_SEND(IPCOM_PP,maxNPOIN_PP,MPI_INTEGER,&
-     &     0,TAG,MPI_COMM_P,MPI_IERR)
-      TAG11=11
-      SIZE11=1    
-      CALL MPI_RECV(NSIDE_PP,SIZE11,MPI_INTEGER,0,&
-     &   TAG11,MPI_COMM_P,MPI_STATUS,MPI_IERR)
-         TAG12=12
-         SIZE12=maxNSIDE_PP
-         TAG13=13
-         SIZE13=maxNSIDE_PP
-         TAG14=14
-         SIZE14=maxNSIDE_PP
-         CALL MPI_RECV(NX_PP,SIZE12,MPI_REAL,0,&
-     &    TAG12,MPI_COMM_P,MPI_STATUS,MPI_IERR)
-         CALL MPI_RECV(NY_PP,SIZE13,MPI_REAL,0,&
-     &    TAG13,MPI_COMM_P,MPI_STATUS,MPI_IERR)
-         CALL MPI_RECV(EL_PP,SIZE14,MPI_REAL,0,&
-     &    TAG14,MPI_COMM_P,MPI_STATUS,MPI_IERR)
+          TAG11=11
+          SIZE11=1
+          TAG12=12
+          SIZE12=maxNSIDE_PP
+          TAG13=13
+          SIZE13=maxNSIDE_PP
+          TAG14=14
+          SIZE14=maxNSIDE_PP
           TAG15=15
           SIZE15=8*maxNSIDE_PP
           TAG16=16
@@ -692,20 +639,70 @@
           SIZE17=maxNSIDE_PP
           TAG18=18
           SIZE18=1
-      CALL MPI_RECV(ISIDE_PP,SIZE15,MPI_INTEGER,0,&
-     &     TAG15,MPI_COMM_P,MPI_STATUS,MPI_IERR)
-      CALL MPI_RECV(ISCOM_PP,SIZE16,MPI_INTEGER,0,&
-     &     TAG16,MPI_COMM_P,MPI_STATUS,MPI_IERR)
-      CALL MPI_RECV(LCOMM_PP,SIZE17,MPI_INTEGER,0,&
-     &     TAG17,MPI_COMM_P,MPI_STATUS,MPI_IERR)
-      CALL MPI_RECV(NCOMM_PP,SIZE18,MPI_INTEGER,0,&
+          CALL MPI_SEND(NSIDE_PP,SIZE11,MPI_INTEGER,IG,&
+     &       TAG11,MPI_COMM_P,MPI_IERR)   
+          CALL MPI_SEND(NX_PP,SIZE12,MPI_REAL,IG,&
+     &       TAG12,MPI_COMM_P,MPI_IERR)  
+          CALL MPI_SEND(NY_PP,SIZE13,MPI_REAL,IG,&
+     &        TAG13,MPI_COMM_P,MPI_IERR)
+          CALL MPI_SEND(EL_PP,SIZE14,MPI_REAL,IG,&
+     &        TAG14,MPI_COMM_P,MPI_IERR)
+          CALL MPI_SEND(ISIDE_PP,SIZE15,MPI_INTEGER,IG,&
+     &     TAG15,MPI_COMM_P,MPI_IERR)
+          CALL MPI_SEND(ISCOM_PP,SIZE16,MPI_INTEGER,IG,&
+     &         TAG16,MPI_COMM_P,MPI_IERR)
+          CALL MPI_SEND(LCOMM_PP,SIZE17,MPI_INTEGER,IG,&
+     &         TAG17,MPI_COMM_P,MPI_IERR)
+          CALL MPI_SEND(NCOMM_PP,SIZE18,MPI_INTEGER,IG,&
+     &         TAG18,MPI_COMM_P,MPI_IERR)
+
+10009   CONTINUE
+      ENDIF   !IF(MPI_RANK_P.EQ.0)THEN !xvmnsdnmbfa
+
+      IF(MPI_RANK_P.NE.0)THEN !ddpddpddpd
+        TAG=MPI_RANK_P*10
+        CALL MPI_SEND(IPCOM_PP,maxNPOIN_PP,MPI_INTEGER,&
+     &    0,TAG,MPI_COMM_P,MPI_IERR)
+        TAG11=11
+        SIZE11=1    
+        CALL MPI_RECV(NSIDE_PP,SIZE11,MPI_INTEGER,0,&
+     &    TAG11,MPI_COMM_P,MPI_STATUS,MPI_IERR)
+        TAG12=12
+        SIZE12=maxNSIDE_PP
+        TAG13=13
+        SIZE13=maxNSIDE_PP
+        TAG14=14
+        SIZE14=maxNSIDE_PP
+        CALL MPI_RECV(NX_PP,SIZE12,MPI_REAL,0,&
+     &    TAG12,MPI_COMM_P,MPI_STATUS,MPI_IERR)
+        CALL MPI_RECV(NY_PP,SIZE13,MPI_REAL,0,&
+     &    TAG13,MPI_COMM_P,MPI_STATUS,MPI_IERR)
+        CALL MPI_RECV(EL_PP,SIZE14,MPI_REAL,0,&
+     &    TAG14,MPI_COMM_P,MPI_STATUS,MPI_IERR)
+        TAG15=15
+        SIZE15=8*maxNSIDE_PP
+        TAG16=16
+        SIZE16=maxNSIDE_PP
+        TAG17=17
+        SIZE17=maxNSIDE_PP
+        TAG18=18
+        SIZE18=1
+        CALL MPI_RECV(ISIDE_PP,SIZE15,MPI_INTEGER,0,&
+     &    TAG15,MPI_COMM_P,MPI_STATUS,MPI_IERR)
+        CALL MPI_RECV(ISCOM_PP,SIZE16,MPI_INTEGER,0,&
+     &    TAG16,MPI_COMM_P,MPI_STATUS,MPI_IERR)
+        CALL MPI_RECV(LCOMM_PP,SIZE17,MPI_INTEGER,0,&
+     &    TAG17,MPI_COMM_P,MPI_STATUS,MPI_IERR)
+        CALL MPI_RECV(NCOMM_PP,SIZE18,MPI_INTEGER,0,&
      &    TAG18,MPI_COMM_P,MPI_STATUS,MPI_IERR)
       ENDIF !  IF(MPI_RANK_P.NE.0)THEN !ddpddpddpd
+
 !
-! *** CALL THE ROUTINE FOR CONSTRUCTING THE EDGFLX COMMUNICATION MATRICES
-!
+! ***   CALL THE ROUTINE FOR CONSTRUCTING THE EDGFLX COMMUNICATION MATRICES
+! 
       CALL EDGCOM(NGRPS,MPI_RANK_P,NCOMM_PP,NSIDE_PP,SDCOM_PP,ISIDE_PP,&
      &               LCOMM_PP,ISCOM_PP,MPI_COMM_P)
+      CALL MPI_BARRIER(MPI_COMM_WORLD,MPI_IERR)
 !
 ! *** FORMAT STATEMENTS
 !

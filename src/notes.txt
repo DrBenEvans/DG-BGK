@@ -185,3 +185,30 @@ spectralBGK.f90:
   2. Wrong format description (parentheses missing in format description)
 
 VSPACE.f90: No problems
+
+#################################################
+##  RUNTIME ERRORS (solved as they are found) ###
+#################################################
+
+1. Misuse of MPI_COMM_SPLIT: it needs a MPI_COMM_RANK call afterwards 
+retrieve the rank. This has been corrected also in EDGFLXOPT.
+2. Issue in PTMESH: 
+
+Fatal error in MPI_Send: Invalid rank, error stack:
+MPI_Send(201): MPI_Send(buf=0x7ffdf84f38b0, count=1, MPI_INTEGER, dest=3, tag=100, comm=0x84000004) failed
+MPI_Send(118): Invalid rank has value 3 but must be nonnegative and less than 3
+
+Due to the fact that NPROC was passed to PTMESH instead of MPI_SIZE_P.
+
+3.  Issue in INICON2 leads to SEGFAULT. Notice this issue can be also in INICON. [TO CHECK]
+    WRONG NUMBER OF PARAMETER PASSED TO FUNCTION - MPI_RANK_P was passed twice.
+    (once as itself and once as replacement of MPI_RANK)
+
+4. An issue seemingly in COMPMU
+   FORTRAN INDEXING: IDX=3*IE+IN  instead of IDX=3*(IE-1)+IN 
+
+5. A modification made to EDGFLXOPT created an invalid communicator for the MPI_COMM_P master
+   which was not included in che MPI_COMM_SLAVES, and as such it could not get a rank number.
+   So the MPI_COMM_RANK call on the master was failing.
+
+6. SEGFAULT in INFLOW

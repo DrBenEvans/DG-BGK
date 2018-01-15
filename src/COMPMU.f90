@@ -48,7 +48,7 @@
 !
       DO IE=1,NELEM_PP !ljfkajdfkajdfkljvv
         DO IN=1,NNODE !rlfdkfvsdfvvvfdd
-          IDX=3*IE+IN
+          IDX=3*(IE-1)+IN
 !
 ! ***     NUMBER DENSITY AT THIS NODE
 !
@@ -86,7 +86,7 @@
 !
       DO IE=1,NELEM_PP !ljfkajdfkajdfkljvv
         DO IN=1,NNODE !rlfdkfvsdfvvvfdd
-          IDX=3*IE+IN
+          IDX=3*(IE-1)+IN
 !
           C2=2.0
           CR=SQRT(C2)*CTG(IDX)

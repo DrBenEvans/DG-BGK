@@ -1,6 +1,6 @@
         SUBROUTINE INICON2(NPOIN,NNODE,NELEM,NELEM_PP,INTMA_PP,& 
-     &    ELGRP,NPOIN_PP,VNPNT,VCORD,DISNF_PP,IPCOM_PP,CINF,rv,IVD&
-     &    ,GC,M,&
+     &    ELGRP,NPOIN_PP,VNPNT,VCORD,DISNF_PP,IPCOM_PP,CINF,rv,&
+     &    IVD,GC,M,&
      &                 MPI_RANK_P,MPI_SIZE_P,MPI_COMM_P,&
      &                 MPI_RANK_V,MPI_SIZE_V,MPI_COMM_V,&
      &                 VSPACE_FIRST,VSPACE_LAST) 
@@ -217,6 +217,7 @@
         CALL MPI_BARRIER(MPI_COMM_P,MPI_IERR) 
 !
       ENDIF  !   ELSE ! IF(RS.EQ.1)THEN !dlafcccnwweppsdc
+
 !
 ! *** ASK WHETHER THERE IS AN INFLOW PRESENT? 
 !
