@@ -57,7 +57,6 @@
       INTEGER VNPNT_PART,VSPACE_FIRST,VSPACE_LAST,IG,TSIZE
       REAL DISNF_PP(NNODE,VSPACE_FIRST:VSPACE_LAST,maxNELEM_PP)
       REAL DISNF(NNODE,VSPACE_FIRST:VSPACE_LAST,NELEM)
-      INTEGER VNPNT_PART
 
 
 !
@@ -85,11 +84,11 @@
       DO IG=1,MPI_SIZE_P !
         TSIZE = NEGRP(IG)*3*VNPNT_PART
         IF(MPI_RANK_P.EQ.IG)THEN
-          MPI_SEND(DISNF_PP,TSIZE,MPI_REAL,0,1,&
+          CALL MPI_SEND(DISNF_PP,TSIZE,MPI_REAL,0,1,&
      &            MPI_COMM_P,MPI_IERR)
         ENDIF
         IF(MPI_RANK_P.EQ.0)THEN
-          MPI_RECV(DISNF_PP,TSIZE,MPI_REAL,IG,1,&
+          CALL MPI_RECV(DISNF_PP,TSIZE,MPI_REAL,IG,1,&
      &            MPI_COMM_P,MPI_IERR)
           ! Copying DISNF_PP into DISNF    
           DO IE=1,NELEM ! scanning through DISNF
@@ -109,11 +108,11 @@
         TSIZE =  NELEM*3*VNPNT_PART
         DO IVP=0,MPI_SIZE_V-1 !dvkjdkjdjkshasdjkh
           IF((IVP.EQ.MPI_RANK_V).AND.(IVP.NE.0)) THEN
-              MPI_SEND(DISNF,TSIZE,MPI_REAL,0,1,&
+              CALL MPI_SEND(DISNF,TSIZE,MPI_REAL,0,1,&
      &             MPI_COMM_V,MPI_IERR)
           ENDIF          
           IF(0.EQ.MPI_RANK_V) THEN !dsaaanccmna
-            IF(IVP.NE.0) MPI_RECV(DISNF,TSIZE,MPI_REAL,IVP,1,&
+            IF(IVP.NE.0) CALL MPI_RECV(DISNF,TSIZE,MPI_REAL,IVP,1,&
      &             MPI_COMM_V,MPI_IERR)
 
             DO IV=VSPACE_FIRST,VSPACE_LAST ! 1 to VNPNT_PART for rank 0

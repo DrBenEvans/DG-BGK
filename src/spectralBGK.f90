@@ -90,6 +90,7 @@
         ! mpi-stuff for velocity space partitioning
         INTEGER MPI_RANK_V,MPI_SIZE_V,MPI_COMM_V,GROUP_V
         INTEGER VNPNT_PART,VSPACE_FIRST,VSPACE_LAST
+        INTEGER MPI_SIZE
 !
 ! *** DECLARE REAL VARIABLES 
 ! 
@@ -215,7 +216,7 @@
       CALL MPI_COMM_SPLIT(MPI_COMM_WORLD,GROUP_V,MPI_RANK_V,MPI_COMM_V,&
      &               MPI_IERR)
 
-      WRITE(*,"A5,5I6")"MPI",MPI_RANK,GROUP_V,MPI_RANK_V,&
+      WRITE(*,"(A5,5I6)")"MPI",MPI_RANK,GROUP_V,MPI_RANK_V,&
      &                          GROUP_P,MPI_RANK_P  
 
       ALLOCATE(VCORD(3,VNPNT)) ! allocating VCORD on all VSPACE on all ranks
