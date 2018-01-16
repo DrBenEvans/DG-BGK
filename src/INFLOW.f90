@@ -22,40 +22,39 @@
 ! *** CONSTRUCT THE MAXWELLIAN nf FOR THIS POINT IN VELOCITY SPACE
 ! *** BASED ON THE PRESCRIBED INFLOW CONDITIONS
 !
-        Tin=CINF(1)
-        Pin=CINF(2)*(10**5)
-        U0=CINF(3)
-        V0=CINF(4)
-        RHO=Pin/(R*Tin)
-        BETA=SQRT(RHO/(2*Pin))
-        C0=(RHO*NA)/M
-        C1=(BETA**2)/PI
-        UDASH=UX-U0
-        VDASH=UY-V0
-        C2=(UDASH**2+VDASH**2)
-        nf=C0*C1*EXP(-(BETA**2)*C2)
+      Tin=CINF(1)
+      Pin=CINF(2)*(10**5)
+      U0=CINF(3)
+      V0=CINF(4)
+      RHO=Pin/(R*Tin)
+      BETA=SQRT(RHO/(2*Pin))
+      C0=(RHO*NA)/M
+      C1=(BETA**2)/PI
+      UDASH=UX-U0
+      VDASH=UY-V0
+      C2=(UDASH**2+VDASH**2)
+      nf=C0*C1*EXP(-(BETA**2)*C2)
 !
 ! *** LOOP OVER ALL BOUNDARY SIDES
 !
-       DO 1001 IB=1,NBOUN
+      DO 1001 IB=1,NBOUN
         IP1=BSIDO(1,IB)
         IP2=BSIDO(2,IB)
         TEST=BSIDO(4,IB)
-       IF(TEST.EQ.1)THEN     !INFLOW BOUNDARY
-! *** FIND ALL THE DISCONTINUOUS NODES SURROUNDING THIS MESH NODE
-       DO 1002 IE=1,NELEM_PP
-       DO 1003 IN=1,NNODE
-          IPT=INTMA(IN,IE)
-       IF((IPT.EQ.IP1).OR.(IPT.EQ.IP2))THEN
-            DISNF(IN,IV,IE)=nf
-       ENDIF
-!
- 1003 CONTINUE
- 1002 CONTINUE
-       ENDIF
+        IF(TEST.EQ.1)THEN     !INFLOW BOUNDARY
+! ***     FIND ALL THE DISCONTINUOUS NODES SURROUNDING THIS MESH NODE
+          DO 1002 IE=1,NELEM_PP
+            DO 1003 IN=1,NNODE
+              IPT=INTMA(IN,IE)
+              IF((IPT.EQ.IP1).OR.(IPT.EQ.IP2))THEN
+                DISNF(IN,IV,IE)=nf
+              ENDIF
+ 1003       CONTINUE
+ 1002     CONTINUE
+        ENDIF
 !
  1001 CONTINUE
 ! 
-          RETURN 
+      RETURN 
 ! 
 	  END 

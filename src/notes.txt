@@ -211,4 +211,20 @@ Due to the fact that NPROC was passed to PTMESH instead of MPI_SIZE_P.
    which was not included in che MPI_COMM_SLAVES, and as such it could not get a rank number.
    So the MPI_COMM_RANK call on the master was failing.
 
-6. SEGFAULT in INFLOW
+6. SEGFAULT in INFLOW - the wrong number of arguments was passed to subroutine.
+   (VSPACE_FIRST and VSPACE_LAST were missing).
+
+7. SEGFAULT in GETRES - likely due to MPI_REDUCE called on RESIDUAL_PP and RESIDUAL instead of the
+    right portions - RESIDUAL_PP(VSPACE_FIRST:VSPACE_LAST) and RESIDUAL(VSPACE_FIRST:VSPACE_LAST)
+    [TO CHECK] 
+
+8. Invalid communicator in MACROS - Due to bad argument passing 
+   (a RANK was passed where it should not have)
+
+9. in ADVNCE, RANK was used without being defined (issue found only with -C and make clean)
+
+10. In OUTPUT, NEGRP was not initialised correctly on slaves and caused issues. 
+    This was actually an error in PTMESH - only NGRPS-1 instead of NGRPS elements were broadcasted.
+
+11. In OUTPUT there seems to be a problem with MPI send and RECV of DISNF_PP. Likely the problem is the 
+    shape/limits of the data to send or receive. See issue "SEGFAULT in GETRES".

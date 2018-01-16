@@ -208,6 +208,8 @@
       GROUP_P = MPI_RANK / MPI_SIZE_P
       GROUP_V = MPI_RANK - GROUP_P*MPI_SIZE_P
 
+
+
       
      
  
@@ -373,9 +375,9 @@
      &                  IMMAT ,NBNOI ,BSIDO ,& 
      &                  NBNOR,NGEOM,RORDER,TORDER,& 
      &                  VNPNT,SUMWEIGHT,VCORD,& 
-     &                  rv,RHO,UVEL,VVEL,& 
-     &                  PS,TEMP,ALPHA,CINF,MXSID,& 
-     &                  MPI_SIZE,IVD,FORCEOUT,d,R,M,&
+     &                  rv,RHO,UVEL,VVEL,PS,&
+     &                  TEMP,ALPHA,CINF,MXSID,MPI_SIZE,IVD,FORCEOUT,&
+     &                  d,R,M,&
      &                  MPI_RANK_P,MPI_SIZE_P,MPI_COMM_P,&
      &                  MPI_RANK_V,MPI_SIZE_V,MPI_COMM_V,&
      &                  VSPACE_FIRST,VSPACE_LAST) 

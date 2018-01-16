@@ -124,24 +124,6 @@
 !
 ! *** CODE TO DO THE DISTRIBUTION FUNCTION PRINTOUTS AT VARIOUS MESH POINTS
 !
-!      IF(RANK.EQ.3)THEN
-!      filename='nfplot1.dat'
-!      OPEN(15,file=filename,status='NEW')
-!      filename='nfplot2.dat'
-!      OPEN(25,file=filename,status='NEW')
-!      filename='nfplot3.dat'
-!      OPEN(35,file=filename,status='NEW')
-!      filename='nfplot4.dat'
-!      OPEN(45,file=filename,status='NEW')
-!      filename='nfplot5.dat'
-!      OPEN(55,file=filename,status='NEW')
-!      filename='nfplot6.dat'
-!      OPEN(65,file=filename,status='NEW')
-!      filename='nfplot7.dat'
-!      OPEN(75,file=filename,status='NEW')
-!      filename='nfplot8.dat'
-!      OPEN(85,file=filename,status='NEW')
-!      ENDIF
 
 ! 
       C0=0.0 
@@ -160,6 +142,7 @@
      &           DISND_PP,DISUX_PP,DISUY_PP,DISPS_PP,M,RGas,&
      &           MPI_RANK_V,MPI_SIZE_V,MPI_COMM_V,&
      &           VSPACE_FIRST,VSPACE_LAST)
+        WRITE(*,"(A3,2I5,I15,A15)")"MPI",MPI_RANK_P,MPI_RANK_V,MPI_COMM_V,"H0"
       ENDIF
 ! 
 ! *** CONVERT MACRO_PPs to MACROS 
@@ -173,7 +156,6 @@
 ! 
 ! *** WRITE OUTPUT DATA TO RESULTS FILE 
 !  
-      WRITE(*,"(A3,I3,A15)") "MPI",MPI_RANK_P,"GOT HERE"
       IF((MPI_RANK_P.EQ.0).AND.(MPI_RANK_V.EQ.0))THEN ! write only on master rank
         WRITE(17,500) 0 
         WRITE(18,500) 0 
@@ -248,8 +230,8 @@
 !
 ! *** LOOP OVER THE NODES IN VELOCITY SPACE 
 ! 
-        WRITE(*,"(A3,2I5,A15)") "MPI",MPI_RANK_P,MPI_RANK_V,"GOT HERE 1"
         DO 7000 IV=VSPACE_FIRST,VSPACE_LAST
+          WRITE(*,"(A3,3I5,A15)")"MPI",MPI_RANK_P,MPI_RANK_V,IV,"HERE"
 ! 
 ! ***     SYNCHRONISE 
 ! 
@@ -257,7 +239,6 @@
 ! 
 ! ***     IDENTIFY THE POSITION IN THE VELOCITY SPACE MESH BY UX,UV 
 ! 
-          WRITE(*,"(A3,3I5,A15)")"MPI",MPI_RANK_P,MPI_RANK_V,IV,"HERE 2"
 
           ETA=VCORD(1,IV)
           ZETA=VCORD(2,IV)
@@ -279,26 +260,22 @@
 ! 
 ! ***       OBTAIN THE FLUXES AT THE POINTS 
 ! 
-          WRITE(*,"(A3,3I5,A15)")"MPI",MPI_RANK_P,MPI_RANK_V,IV,"HERE 3"
             CALL GETFLA(NELEM_PP,NNODE,VNPNT,& 
      &         DISNF_PP,FLUXP_PP,FLUYP_PP,&
      &         UX,UY,IV,VSPACE_FIRST,VSPACE_LAST)
 ! 
 ! ***       ELEMENT CONTRIBUTIONS (STEP 1) 
 ! 
-          WRITE(*,"(A3,3I5,A15)")"MPI",MPI_RANK_P,MPI_RANK_V,IV,"HERE 4"
             CALL GETELC(NELEM_PP,GEOME_PP,NGEOM,NNODE,VNPNT,IV,DISNF_PP,& 
      &        FLUXP_PP,FLUYP_PP,UMEAN_PP,RHS_PP,DTE,UX,UY,MU_PP,NFO_PP,&
      &        ITIME,VSPACE_FIRST,VSPACE_LAST)
 ! 
 ! ***       FILL DELUN(NAMAT=1,NPOIN) WITH THE VALUE SET IN C00 
-          WRITE(*,"(A3,3I5,A15)")"MPI",MPI_RANK_P,MPI_RANK_V,IV,"HERE 5"
             CALL RFILLA(DELUN_PP,1,NNODE,NELEM_PP,C0) 
           ENDIF  !  IF(MPI_RANK_P.NE.0)THEN !dvjkaapxxmxkayy
           CALL MPI_BARRIER(MPI_COMM_WORLD,MPI_IERR)
 
 
-          WRITE(*,"(A3,3I5,A15)")"MPI",MPI_RANK_P,MPI_RANK_V,IV,"HERE 6"
           CALL EDGFLXOPT(NELEM_PP,NSIDE_PP,ISIDE_PP,RHS_PP,& 
      &       NX_PP,NY_PP,EL_PP,UX,UY,RSIDO_PP,BSIDO_PP,NBOUN_PP,& 
      &       NBNOR,ALPHA,ETA_PP,VNPNT,IV,DISNF_PP,UMEAN_PP,& 
@@ -316,7 +293,6 @@
 ! 
 ! *** OBTAIN THE INCREMENTS -PREDICTIONS 
 ! 
-          WRITE(*,"(A3,3I5,A15)")"MPI",MPI_RANK_P,MPI_RANK_V,IV,"HERE 7"
             IF(IMMAT.EQ.1)THEN 
               CALL GETINC(NNODE ,MMAT_PP,RHS_PP,DELUN_PP,& 
      &           NELEM_PP,RESIDUAL_PP,maxNELEM_PP,VNPNT,DISNF_PP,&
@@ -331,25 +307,26 @@
 ! 
 ! *** ADD INCREMENTS  
 ! 
-          WRITE(*,"(A3,3I5,A15)")"MPI",MPI_RANK_P,MPI_RANK_V,IV,"HERE 8"
             CALL ADTHEM(IV,VNPNT,DISNF_PP,DELUN_PP,NELEM_PP,&
      &        VSPACE_FIRST,VSPACE_LAST)
 !
 ! *** RESET THE INFLOW BOUNDARY VALUES
 !
-          WRITE(*,"(A3,3I5,A15)")"MPI",MPI_RANK_P,MPI_RANK_V,IV,"HERE 9"
             CALL INFLOW(IV,UX,UY,NNODE,VNPNT,NELEM_PP,NPOIN_PP,&
      &        INTMA_PP,CINF,NBOUN_PP,NBNOI,&
-     &        BSIDO_PP,DISNF_PP,ITIME,PS_PP,RGas,M)
+     &        BSIDO_PP,DISNF_PP,ITIME,PS_PP,RGas,M,&
+     &        VSPACE_FIRST,VSPACE_LAST)
+
 !
           ENDIF ! IF(MPI_RANK_P.NE.0)THEN !dssserwfjvvfskjfs
 ! 
-          WRITE(*,"(A3,3I5,A15)")"MPI",MPI_RANK_P,MPI_RANK_V,IV,"HERE10"
           CALL MPI_BARRIER(MPI_COMM_WORLD,MPI_IERR) 
 ! 
 ! *** END LOOP OVER VELOCITY SPACE NODES IN THE CURRENT PARTITION
 ! 
  7000   CONTINUE
+
+        WRITE(*,"(A3,3I5,A15)")"MPI",MPI_RANK_P,MPI_RANK_V,IV,"HERE"
 
         CALL GETRES(VNPNT,RESIDUAL,RESIDUAL_PP,MPI_RANK_P,MPI_SIZE_P,&
      &           VSPACE_FIRST,VSPACE_LAST,MPI_COMM_P) 
@@ -360,7 +337,7 @@
         IF(MPI_RANK_P.NE.0)THEN 
           CALL MACROS(rv,VNPNT,SUMWEIGHT,NPOIN_PP,NNODE,DISNF_PP,&
      &           VCORD,INTMA_PP,NELEM_PP,GEOME_PP,NGEOM,&
-     &           ND_PP,RHO_PP,UVEL_PP,VVEL_PP,PS_PP,TEMP_PP,RANK,&
+     &           ND_PP,RHO_PP,UVEL_PP,VVEL_PP,PS_PP,TEMP_PP,&
      &           DISND_PP,DISUX_PP,DISUY_PP,DISPS_PP,M,RGas,&
      &           MPI_RANK_V,MPI_SIZE_V,MPI_COMM_V,&
      &           VSPACE_FIRST,VSPACE_LAST)
@@ -373,7 +350,7 @@
      &        UVEL_PP,VVEL_PP,PS_PP,TEMP_PP,NPOIN,ND,RHO,UVEL,VVEL,&
      &        PS,TEMP,NGRPS,MPI_RANK_P,MPI_COMM_P)
 ! ***       WRITE OUTPUT DATA TO RESULTS FILE 
-            IF(RANK.EQ.0)THEN
+            IF((MPI_RANK_P.EQ.0).AND.(MPI_RANK_V.EQ.0))THEN
 ! ***         CONSTRUCT GLOBAL MACRO VARIABLE VECTORS 
               WRITE(17,500) ITIME 
               WRITE(18,500) ITIME 
@@ -389,7 +366,8 @@
      &        UVEL_PP,VVEL_PP, PS_PP,TEMP_PP,NPOIN,ND,RHO,UVEL,VVEL,&
      &        PS,TEMP,NGRPS,MPI_RANK_P,MPI_COMM_P)
 
-          IF((RANK.EQ.0).AND.(MOD(ITIME,1000).EQ.0))THEN
+          IF((MPI_RANK_P.EQ.0).AND.(MPI_RANK_V.EQ.0)&
+     &         .AND.(MOD(ITIME,1000).EQ.0))THEN
             WRITE(17,500) ITIME
             WRITE(18,500) ITIME
             DO 3011 IP=1,NPOIN
@@ -398,6 +376,7 @@
  3011       CONTINUE
           ENDIF
         ENDIF
+        WRITE(*,"(A3,3I5,A15)")"MPI",MPI_RANK_P,MPI_RANK_V,IV,"HERE3"
 ! 
 ! *** WRITE TO MAX RESIDUAL FILE 
 ! 
@@ -419,11 +398,13 @@
 ! 
 ! ***   SYNCHRONISE 
 ! 
-         CALL MPI_BARRIER(MPI_COMM_WORLD,MPI_IERR) 
+        CALL MPI_BARRIER(MPI_COMM_WORLD,MPI_IERR) 
+        WRITE(*,"(A3,3I5,A15)")"MPI",MPI_RANK_P,MPI_RANK_V,IV,"HERE4"
 ! 
 ! ***   END IF TIMESTEPPING LOOP 
 ! 
       ENDDO ! DO ITIME=1,NTIME !fsajfdclaksjdnckajlndaa
+      WRITE(*,"(A3,2I5,A15)")"MPI",MPI_RANK_P,MPI_RANK_V,"End time loop"
 !
 ! *** CONSTRACT GLOBAL MACRO VECTORS
 !
@@ -449,17 +430,6 @@
         CLOSE(18) 
       ENDIF 
 
-!      CLOSE(50+RANK)
-!      IF(RANK.EQ.3)THEN
-!      CLOSE(15)
-!      CLOSE(25)
-!      CLOSE(35)
-!      CLOSE(45)
-!      CLOSE(55)
-!      CLOSE(65)
-!      CLOSE(75)
-!      CLOSE(85)
-!      ENDIF
 
       CALL MPI_BARRIER(MPI_COMM_WORLD,MPI_IERR) 
 !  

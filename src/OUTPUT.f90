@@ -1,5 +1,5 @@
       SUBROUTINE OUTPUT(NNODE,NPOIN_PP,NPOIN,NELEM,NELEM_PP,&
-     &              maxNELEM_pp,COORD,INTMA , DISNF_PP, VNPNT,IPCOM_PP,&
+     &              maxNELEM_PP,COORD,INTMA , DISNF_PP, VNPNT,IPCOM_PP,&
      &                     ELGRP,NEGRP,IVD,&
      &                     MPI_RANK_P,MPI_SIZE_P,MPI_COMM_P,&
      &                     MPI_RANK_V,MPI_SIZE_V,MPI_COMM_V,&
@@ -81,15 +81,26 @@
       CALL MPI_BARRIER(MPI_COMM_WORLD,MPI_IERR) 
     
       VNPNT_PART = VSPACE_LAST-VSPACE_FIRST+1
-      DO IG=1,MPI_SIZE_P !
+      DO IG=1,MPI_SIZE_P-1 !
         TSIZE = NEGRP(IG)*3*VNPNT_PART
         IF(MPI_RANK_P.EQ.IG)THEN
-          CALL MPI_SEND(DISNF_PP,TSIZE,MPI_REAL,0,1,&
+          WRITE(*,"(A3,2I5,I10,A12)")"MPI",MPI_RANK_P,MPI_RANK_V,&
+     &            TSIZE,"OUTPUT0"
+          CALL MPI_SEND(DISNF_PP(:,VSPACE_FIRST:VSPACE_LAST,:),&
+     &            TSIZE,MPI_REAL,0,1,&
      &            MPI_COMM_P,MPI_IERR)
+          WRITE(*,"(A3,2I8,A12)")"MPI",MPI_RANK_P,MPI_RANK_V,&
+     &            "OUTPUT1"
+
         ENDIF
         IF(MPI_RANK_P.EQ.0)THEN
-          CALL MPI_RECV(DISNF_PP,TSIZE,MPI_REAL,IG,1,&
+          WRITE(*,"(A3,2I5,I10,A12)")"MPI",MPI_RANK_P,MPI_RANK_V,&
+     &            TSIZE,"OUTPUT0"
+          CALL MPI_RECV(DISNF_PP(:,VSPACE_FIRST:VSPACE_LAST,:),&
+     &            TSIZE,MPI_REAL,IG,1,&
      &            MPI_COMM_P,MPI_IERR)
+          WRITE(*,"(A3,2I8,A12)")"MPI",MPI_RANK_P,MPI_RANK_V,&
+     &            "OUTPUT1"
           ! Copying DISNF_PP into DISNF    
           DO IE=1,NELEM ! scanning through DISNF
           NRANK = ELGRP(IE,1) ! Checking if we have received the 
@@ -102,7 +113,11 @@
           ENDDO
         ENDIF
       ENDDO
-      
+
+      WRITE(*,"(A3,2I8,A12)")"MPI",MPI_RANK_P,MPI_RANK_V,&
+     &            "OUTPUT2"
+      CALL MPI_BARRIER(MPI_COMM_WORLD,MPI_IERR)
+     
       ! only the master ranks in the MPI_COMM_P communicators
       IF(MPI_RANK_P.EQ.0)THEN !jdfcdknsdasdjkha
         TSIZE =  NELEM*3*VNPNT_PART
@@ -123,6 +138,9 @@
           ENDIF ! IF(0.EQ.MPI_RANK_V) THEN !dsaaanccmna
         ENDDO ! DO IVP=0,MPI_SIZE_V-1 !dvkjdkjdjkshasdjkh
 
+      WRITE(*,"(A3,2I8,A12)")"MPI",MPI_RANK_P,MPI_RANK_V,&
+     &            "OUTPUT3"
+ 
         IF(MPI_RANK_V.EQ.0)THEN !lkjfsdccddna
           CLOSE(20) 
 ! ***     OUTPUT FOR GID MESHFILE 
