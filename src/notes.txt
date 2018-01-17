@@ -186,9 +186,9 @@ spectralBGK.f90:
 
 VSPACE.f90: No problems
 
-#################################################
-##  RUNTIME ERRORS (solved as they are found) ###
-#################################################
+#############################################################
+##  RUNTIME ERRORS (solved as they are found on Ed's phi) ###
+#############################################################
 
 1. Misuse of MPI_COMM_SPLIT: it needs a MPI_COMM_RANK call afterwards 
 retrieve the rank. This has been corrected also in EDGFLXOPT.
@@ -228,3 +228,11 @@ Due to the fact that NPROC was passed to PTMESH instead of MPI_SIZE_P.
 
 11. In OUTPUT there seems to be a problem with MPI send and RECV of DISNF_PP. Likely the problem is the 
     shape/limits of the data to send or receive. See issue "SEGFAULT in GETRES".
+    STILL TO SOLVE
+
+
+################################################
+## Runtime errors on HPCWALES  #################
+################################################
+
+1.
