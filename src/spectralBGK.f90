@@ -229,8 +229,8 @@
       WRITE(*,*) MPI_IERR
       CALL MPI_BARRIER(MPI_COMM_WORLD,MPI_IERR)
 
-      WRITE(*,"(A5,5I6.1)")"MPI",MPI_RANK,GROUP_V,MPI_RANK_V,&
-     &                          GROUP_P,MPI_RANK_P  
+      WRITE(*,"(A5,5I6.1)")"MPI",MPI_RANK_V,MPI_RANK_P,&
+     &                      VSPACE_FIRST,VSPACE_LAST
 
       CALL MPI_BARRIER(MPI_COMM_WORLD,MPI_IERR)
       ALLOCATE(VCORD(3,VNPNT)) ! allocating VCORD on all VSPACE on all ranks
