@@ -81,26 +81,29 @@
       CALL MPI_BARRIER(MPI_COMM_WORLD,MPI_IERR) 
     
       VNPNT_PART = VSPACE_LAST-VSPACE_FIRST+1
+      WRITE(*,"(A3,4I5)")"MPI",MPI_RANK_P,MPI_RANK_V,&
+     &           VSPACE_FIRST,VSPACE_LAST
+
       DO IG=1,MPI_SIZE_P-1 !
         TSIZE = NEGRP(IG)*3*VNPNT_PART
         IF(MPI_RANK_P.EQ.IG)THEN
           WRITE(*,"(A3,2I5,I10,A12)")"MPI",MPI_RANK_P,MPI_RANK_V,&
-     &            TSIZE,"OUTPUT0"
+     &            TSIZE,"BS"
           CALL MPI_SEND(DISNF_PP(:,VSPACE_FIRST:VSPACE_LAST,:),&
-     &            TSIZE,MPI_REAL,0,1,&
+     &            TSIZE,MPI_REAL,0,IG,&
      &            MPI_COMM_P,MPI_IERR)
           WRITE(*,"(A3,2I8,A12)")"MPI",MPI_RANK_P,MPI_RANK_V,&
-     &            "OUTPUT1"
+     &            "AS"
 
         ENDIF
         IF(MPI_RANK_P.EQ.0)THEN
           WRITE(*,"(A3,2I5,I10,A12)")"MPI",MPI_RANK_P,MPI_RANK_V,&
-     &            TSIZE,"OUTPUT0"
+     &            TSIZE,"BR"
           CALL MPI_RECV(DISNF_PP(:,VSPACE_FIRST:VSPACE_LAST,:),&
-     &            TSIZE,MPI_REAL,IG,1,&
+     &            TSIZE,MPI_REAL,IG,IG,&
      &            MPI_COMM_P,MPI_IERR)
           WRITE(*,"(A3,2I8,A12)")"MPI",MPI_RANK_P,MPI_RANK_V,&
-     &            "OUTPUT1"
+     &            "AR"
           ! Copying DISNF_PP into DISNF    
           DO IE=1,NELEM ! scanning through DISNF
           NRANK = ELGRP(IE,1) ! Checking if we have received the 
@@ -116,6 +119,7 @@
 
       WRITE(*,"(A3,2I8,A12)")"MPI",MPI_RANK_P,MPI_RANK_V,&
      &            "OUTPUT2"
+
       CALL MPI_BARRIER(MPI_COMM_WORLD,MPI_IERR)
      
       ! only the master ranks in the MPI_COMM_P communicators
