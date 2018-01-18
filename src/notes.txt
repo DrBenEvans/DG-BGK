@@ -235,4 +235,4 @@ Due to the fact that NPROC was passed to PTMESH instead of MPI_SIZE_P.
 ## Runtime errors on HPCWALES  #################
 ################################################
 
-1.
+1. MPI_ERR was missing in MPI_REDUCE in GETRES. 
