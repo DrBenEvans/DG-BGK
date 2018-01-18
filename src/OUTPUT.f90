@@ -49,7 +49,7 @@
       REAL COORD(2,NPOIN) 
       INTEGER NEGRP(MPI_SIZE_P-1)
 ! 
-      INTEGER INTMA(NNODE,NELEM) 
+      INTEGER INTMA(NNODE,NELEM),PRINT_EVERY
       ! mpi-stuff for position space partitioning
       INTEGER MPI_RANK_P,MPI_SIZE_P,MPI_COMM_P,GROUP_P
       ! mpi-stuff for velocity space partitioning
@@ -68,6 +68,7 @@
 ! 
 ! *** SET UP CHANNEL TO WRITE TO RESTART FILE 
 ! 
+      PRINT_EVERY = (VSPACE_LAST+1-VSPACE_FIRST)/5
       IF((MPI_RANK_P.EQ.0).AND.(MPI_RANK_V.EQ.0))THEN 
         WRITE(*,*) 
         WRITE(*,*) 
@@ -81,34 +82,26 @@
       CALL MPI_BARRIER(MPI_COMM_WORLD,MPI_IERR) 
     
       VNPNT_PART = VSPACE_LAST-VSPACE_FIRST+1
-      WRITE(*,"(A3,4I5)")"MPI",MPI_RANK_P,MPI_RANK_V,&
-     &           VSPACE_FIRST,VSPACE_LAST
 
+      IF((MPI_RANK_P.EQ.0).AND.(MPI_RANK_V.EQ.0))THEN 
+        WRITE(*,*)"Sending DISNF data to master in MPI_COMM_P..."
+      ENDIF
       DO IG=1,MPI_SIZE_P-1 !
         TSIZE = NEGRP(IG)*3*VNPNT_PART
         IF(MPI_RANK_P.EQ.IG)THEN
-          WRITE(*,"(A3,2I5,I10,A12)")"MPI",MPI_RANK_P,MPI_RANK_V,&
-     &            TSIZE,"BS"
           CALL MPI_SEND(DISNF_PP(:,VSPACE_FIRST:VSPACE_LAST,:),&
      &            TSIZE,MPI_REAL,0,IG,&
      &            MPI_COMM_P,MPI_IERR)
-          WRITE(*,"(A3,2I8,A12)")"MPI",MPI_RANK_P,MPI_RANK_V,&
-     &            "AS"
-
         ENDIF
         IF(MPI_RANK_P.EQ.0)THEN
-          WRITE(*,"(A3,2I5,I10,A12)")"MPI",MPI_RANK_P,MPI_RANK_V,&
-     &            TSIZE,"BR"
           CALL MPI_RECV(DISNF_PP(:,VSPACE_FIRST:VSPACE_LAST,:),&
      &            TSIZE,MPI_REAL,IG,IG,&
-     &            MPI_COMM_P,MPI_IERR)
-          WRITE(*,"(A3,2I8,A12)")"MPI",MPI_RANK_P,MPI_RANK_V,&
-     &            "AR"
+     &            MPI_COMM_P,MPI_STATUS,MPI_IERR)
           ! Copying DISNF_PP into DISNF    
           DO IE=1,NELEM ! scanning through DISNF
-          NRANK = ELGRP(IE,1) ! Checking if we have received the 
-                              ! necessary data in this iteration of the
-                              ! DO IG,MPI_SIZE_P group
+            ! Checking if we have received the necessary data 
+            ! in this iteration of the DO IG,MPI_SIZE_P group
+            NRANK = ELGRP(IE,1) 
             IF(NRANK.EQ.IG)THEN
               IE_PP=ELGRP(IE,2)
               DISNF(:,:,IE) = DISNF_PP(:,:,IE_PP)
@@ -117,11 +110,11 @@
         ENDIF
       ENDDO
 
-      WRITE(*,"(A3,2I8,A12)")"MPI",MPI_RANK_P,MPI_RANK_V,&
-     &            "OUTPUT2"
 
-      CALL MPI_BARRIER(MPI_COMM_WORLD,MPI_IERR)
-     
+      IF((MPI_RANK_P.EQ.0).AND.(MPI_RANK_V.EQ.0))THEN 
+        WRITE(*,*)"Sending DISNF data to general master..."
+      ENDIF
+    
       ! only the master ranks in the MPI_COMM_P communicators
       IF(MPI_RANK_P.EQ.0)THEN !jdfcdknsdasdjkha
         TSIZE =  NELEM*3*VNPNT_PART
@@ -131,10 +124,17 @@
      &             MPI_COMM_V,MPI_IERR)
           ENDIF          
           IF(0.EQ.MPI_RANK_V) THEN !dsaaanccmna
-            IF(IVP.NE.0) CALL MPI_RECV(DISNF,TSIZE,MPI_REAL,IVP,1,&
-     &             MPI_COMM_V,MPI_IERR)
 
+            IF(IVP.NE.0) CALL MPI_RECV(DISNF,TSIZE,MPI_REAL,IVP,1,&
+     &             MPI_COMM_V,MPI_STATUS,MPI_IERR)
+
+            WRITE(*,"(A41,I2)")&
+                 &"Writing to file data from vspace part no.", IVP
             DO IV=VSPACE_FIRST,VSPACE_LAST ! 1 to VNPNT_PART for rank 0
+              IF((MOD(IV,PRINT_EVERY)).EQ.0)THEN 
+                WRITE(*,"(A23,I5)"),&
+     &                   "V-space iteration no.", IV
+              ENDIF
               DO IE=1,NELEM
                 WRITE(20,*) (DISNF(IN,IV,IE),IN=1,NNODE)
               ENDDO
@@ -142,10 +142,10 @@
           ENDIF ! IF(0.EQ.MPI_RANK_V) THEN !dsaaanccmna
         ENDDO ! DO IVP=0,MPI_SIZE_V-1 !dvkjdkjdjkshasdjkh
 
-      WRITE(*,"(A3,2I8,A12)")"MPI",MPI_RANK_P,MPI_RANK_V,&
-     &            "OUTPUT3"
+
  
         IF(MPI_RANK_V.EQ.0)THEN !lkjfsdccddna
+          WRITE(*,*)"Written DISNF data to file."
           CLOSE(20) 
 ! ***     OUTPUT FOR GID MESHFILE 
 ! ***     SET UP CHANNEL 

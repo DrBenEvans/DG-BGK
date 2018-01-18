@@ -172,6 +172,9 @@
 !
 ! *** SET UP THE INITIAL CONDITIONS OF THE PROBLEM (FOR A GAS EXPANSION) 
 !
+      IF((MPI_RANK_P.EQ.0).AND.(MPI_RANK_V.EQ.0))THEN ! write only on master rank
+        WRITE(*,*) "Initialization..."
+      ENDIF
 !      CALL INICON(NPOIN,NNODE,NELEM,NELEM_PP,INTMA_PP,ELGRP,&
 !     &NPOIN_PP,COORD_PP,VNPNT,VCORD,DISNF_PP,IPCOM_PP,rv,&
 !     &                 IVD,&

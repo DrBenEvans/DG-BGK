@@ -110,7 +110,6 @@
 
       ! reducing partial integrals across velocity space 
       ! on all nodes in the position-space partition
-      WRITE(*,"(A3,I5,I15,A15)")"MPI",MPI_RANK_V,MPI_COMM_V,"H01"
       CALL MPI_ALLREDUCE( INT_ARR, INTG_ARR,3*NELEM_PP,MPI_REAL,&
      &               MPI_SUM,MPI_COMM_V,MPI_IERR)
       CALL MPI_ALLREDUCE(INTU_ARR,INTUG_ARR,3*NELEM_PP,MPI_REAL,&

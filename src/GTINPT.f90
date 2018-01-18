@@ -1,6 +1,6 @@
         SUBROUTINE GTINPT(NDIMN ,NNODE ,NPOIN ,NELEM ,& 
      &                  NBOUN ,INTMA ,COORD , BSIDO ,& 
-     &                  IELSI , NBNOI) 
+     &                  IELSI , NBNOI,MPI_RANK_V) 
 ! 
       REAL COORD(NDIMN,NPOIN)   
       REAL TEXT(20) 
@@ -8,6 +8,7 @@
       INTEGER INTMA(NNODE,NELEM),NNODE, NBNOI 
       INTEGER NELEM, NPOIN, NBOUN 
       INTEGER BSIDO(NBNOI,NBOUN),IELSI(2,NELEM) 
+      INTEGER MPI_RANK_V
 ! 
 ! *** READ ALL THE INPUT DATA IN THE FOLLOWING MANNER : 
 ! 
@@ -19,7 +20,8 @@
 ! *** 1. CONNECTIVITY MATRIX : INTMA  
 !  
       READ(14,1) TEXT
-      PRINT*,'Reading connectivity matrix' 
+      WRITE(*,"(A3,I2,A31)"),'VSR',MPI_RANK_V,&
+     &                ': Reading connectivity matrix' 
       DO 1010 I=1,NELEM 
         READ(14,*) IELEM,(INTMA(J,I),J=1,NNODE) 
  1010 CONTINUE 
@@ -27,7 +29,8 @@
 ! *** 2. COORDINATES 
 ! 
       READ(14,1) TEXT 
-      PRINT*,'Reading P-space coordinates'
+      WRITE(*,"(A3,I2,A31)"),'VSR',MPI_RANK_V,&
+     &           ': Reading P-space coordinates'
       DO 1020 I=1,NPOIN 
         READ(14,*) IPOIN,(COORD(J,I),J=1,NDIMN) 
  1020 CONTINUE 
@@ -38,7 +41,8 @@
 !                         D) TEMP IF WALL BOUNDARY
 !                         E) ALPHA x 10 IF WALL BOUNDARY 
       READ(14,1)TEXT 
-      PRINT*,'Reading boundary data'
+      WRITE(*,"(A3,I2,A31)"),'VSR',MPI_RANK_V,&
+     &              ': Reading boundary data'
       DO 1070 I=1,NBOUN 
         READ(14,*)(BSIDO(J,I),J=1,NBNOI) 
  1070 CONTINUE 

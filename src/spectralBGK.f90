@@ -325,7 +325,7 @@
 ! 
         CALL GTINPT( NDIMN ,NNODE ,NPOIN ,NELEM ,& 
      &                  NBOUN ,INTMA ,COORD , BSIDO ,& 
-     &                  IELSI , NBNOI) 
+     &                  IELSI , NBNOI, MPI_RANK_V ) 
       ENDIF ! IF(MPI_RANK_P.EQ.0)THEN  !sdfhasdcabadfadaaa
 ! 
 ! *** BROADCAST THE RELEVANT P-SPACE DATA TO THE SLAVE PROCESSORS 
@@ -368,7 +368,6 @@
 ! 
 ! *** CALL DG_LIN_CONVEC FOR THE DISTRIBUTION FUNCTION CONVECTION PROCESS 
 ! *** (CALLED BY ALL PROCESSORS RANK 0 -> MPI_SIZE-1) 
-       WRITE(*,*),"RANK",MPI_RANK,"CALLING DG_LIN_CONVEC"
        CALL DG_LIN_CONVEC(NDIMN ,NNODE ,NPOIN ,NELEM ,& 
      &                  NBOUN ,INTMA ,COORD ,& 
      &                  NTIME ,CSAFM ,& 

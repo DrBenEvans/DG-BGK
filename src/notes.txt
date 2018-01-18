@@ -11,6 +11,8 @@ necessary (fixed a couple of occurrences of this already)
 - limits for MPI_RANK_P (MPI_SIZE_P includes the master or not? I think
 so but then MPI_SIZE_P == NGRPS+1).
 
+- DTE reductions on all ranks
+
 // compilation errors that really happened
 - Mess with NELEM and NELEM_PP
 - MPI_IERR not passed as an argument where it should.
@@ -19,10 +21,9 @@ so but then MPI_SIZE_P == NGRPS+1).
   in some subroutines (e.g. INTEGER VNPNT_PART,VSPACE_FIRST,VSPACE_LAST)
 - THEN should be on the same line of IF
 - Residual labels on DO. 
-- missing & (in routine declaration)
+- missing '&' (in routine declaration)
 - array accessed in the wrong way after reduction. [THIS MIGHT BE DANGEROUS]
 - parentheses missing in format description
-
 
 #############################
 ### Things to clean up:  ####
@@ -216,6 +217,9 @@ Due to the fact that NPROC was passed to PTMESH instead of MPI_SIZE_P.
 
 7. SEGFAULT in GETRES - likely due to MPI_REDUCE called on RESIDUAL_PP and RESIDUAL instead of the
     right portions - RESIDUAL_PP(VSPACE_FIRST:VSPACE_LAST) and RESIDUAL(VSPACE_FIRST:VSPACE_LAST)
+    UPDATE:
+    NO! THE PROBLEM WAS ONLY RELATED TO MISSING MPI_IERR ARGUMENT.
+    Anyway the fix above solved the problem on Ed's phi, but not on the HPCWALES cluster.
     [TO CHECK] 
 
 8. Invalid communicator in MACROS - Due to bad argument passing 
@@ -228,7 +232,8 @@ Due to the fact that NPROC was passed to PTMESH instead of MPI_SIZE_P.
 
 11. In OUTPUT there seems to be a problem with MPI send and RECV of DISNF_PP. Likely the problem is the 
     shape/limits of the data to send or receive. See issue "SEGFAULT in GETRES".
-    STILL TO SOLVE
+    UPDATE:
+    NO! THE PROBLEM WAS ONLY RELATED TO MISSING MPI_IERR ARGUMENT IN MPI_RECV.
 
 
 ################################################
@@ -236,3 +241,4 @@ Due to the fact that NPROC was passed to PTMESH instead of MPI_SIZE_P.
 ################################################
 
 1. MPI_ERR was missing in MPI_REDUCE in GETRES. 
+
