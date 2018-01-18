@@ -3,7 +3,7 @@
      &                     ELGRP,NEGRP,IVD,&
      &                     MPI_RANK_P,MPI_SIZE_P,MPI_COMM_P,&
      &                     MPI_RANK_V,MPI_SIZE_V,MPI_COMM_V,&
-     &                     VSPACE_FIRST,VSPACE_LAST) 
+     &                     VSPACE_FIRST,VSPACE_LAST,VCORD,rv)  
 ! 
 		IMPLICIT NONE 
         INCLUDE 'mpif.h' 
@@ -48,6 +48,7 @@
       INTEGER NPOIN_PP,IPCOM_PP(NPOIN_PP),IV,ELGRP(NELEM,2) 
       REAL COORD(2,NPOIN) 
       INTEGER NEGRP(MPI_SIZE_P-1)
+
 ! 
       INTEGER INTMA(NNODE,NELEM),PRINT_EVERY
       ! mpi-stuff for position space partitioning
@@ -58,7 +59,8 @@
       REAL DISNF_PP(NNODE,VSPACE_FIRST:VSPACE_LAST,maxNELEM_PP)
       REAL DISNF(NNODE,VSPACE_FIRST:VSPACE_LAST,NELEM)
 
-
+      REAL ETA,ZETA,WEIGHT,RT,THETA,CX,CY,VCORD(3,VNPNT),rv,PI
+      PARAMETER (PI=3.1416)
 !
       TYPE(InputVariables) :: IVD
 ! *** DECLARE THE CHARACTER VARIABLE FILENAME 
@@ -136,7 +138,14 @@
      &                   "V-space iteration no.", IV
               ENDIF
               DO IE=1,NELEM
-                WRITE(20,*) (DISNF(IN,IV,IE),IN=1,NNODE)
+                ETA=VCORD(1,IV) 
+                ZETA=VCORD(2,IV) 
+                WEIGHT=VCORD(3,IV)
+                RT=ETA*(rv/2)+(rv/2)!MAP BACK TO POLAR COORDINATES 
+                THETA=ZETA*PI
+                CX=RT*COS(THETA)!CONVERT TO CARTESIANS 
+                CY=RT*SIN(THETA) 
+                WRITE(20,*) CX,CY,(DISNF(IN,IV,IE),IN=1,NNODE)
               ENDDO
             ENDDO
           ENDIF ! IF(0.EQ.MPI_RANK_V) THEN !dsaaanccmna

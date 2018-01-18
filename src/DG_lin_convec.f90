@@ -226,6 +226,7 @@
      &                     ELGRP,NEGRP,IVD,&
      &                     MPI_RANK_P,MPI_SIZE_P,MPI_COMM_P,&
      &                     MPI_RANK_V,MPI_SIZE_V,MPI_COMM_V,&
-     &                     VSPACE_FIRST,VSPACE_LAST)
+     &                     VSPACE_FIRST,VSPACE_LAST,VCORD,rv)
+
        RETURN 
        END 
