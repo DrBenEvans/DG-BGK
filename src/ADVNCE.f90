@@ -62,7 +62,7 @@
       REAL GEOME_PP(NGEOM,maxNELEM_PP),COORD(2,NPOIN) 
       REAL VCORD(3,VNPNT),CINF(4),NFO_PP(NNODE,NELEM_PP) 
       REAL MMAT_PP(NNODE,maxNELEM_PP),CMMAT_PP(3,3,maxNELEM_PP)      
-      REAL UX, UY, CSAFM,ALPHA,SPEED,C0,DTE,DTEc,DTEb,DTEbnew,DTET
+      REAL UX, UY, CSAFM,ALPHA,SPEED,C0,DTE,DTEc,DTEb,DTET
       REAL NX_PP(NSIDE_PP),NY_PP(NSIDE_PP),EL_PP(NSIDE_PP) 
       REAL RHO_PP(NPOIN_PP),UVEL_PP(NPOIN_PP),VVEL_PP(NPOIN_PP) 
       REAL TEMP_PP(NPOIN_PP),PS_PP(NPOIN_PP),ND_PP(NPOIN_PP) 
@@ -91,6 +91,8 @@
       INTEGER MPI_RANK_P,MPI_SIZE_P,MPI_COMM_P,GROUP_P
       ! mpi-stuff for velocity space partitioning
       INTEGER MPI_RANK_V,MPI_SIZE_V,MPI_COMM_V,GROUP_V
+      INTEGER :: MPI_COMM_SLAVES ! SLAVES COMMUNICATOR
+      INTEGER :: COLOR,SLAVERANK 
 
       CHARACTER filename*80
 !      CHARACTER dbgfilename*80 !TESTING-DEBUG
@@ -176,6 +178,24 @@
 ! 
 ! *** BEGIN THE TIMESTEPPING !!! 
 ! 
+
+      IF (MPI_RANK_P.NE.0) THEN ! adadadfadfad
+       ! To create new communicator 
+            COLOR = 1
+            SLAVERANK = MPI_RANK_P-1
+      ELSE  ! IF (MPI_RANK_P.NE.0) ! adadadfadfad
+            COLOR = MPI_UNDEFINED
+            SLAVERANK = 0
+      ENDIF ! IF (MPI_RANK_P.NE.0) ! adadadfadfad
+ 
+      CALL MPI_COMM_SPLIT(MPI_COMM_P,COLOR,SLAVERANK,&
+     &                          MPI_COMM_SLAVES,MPI_IERR)
+      IF(MPI_RANK_P.NE.0)THEN !kdjfhsewew
+        CALL MPI_COMM_RANK(MPI_COMM_SLAVES,SLAVERANK,MPI_IERR)
+      ENDIF
+
+  
+
       ITERTIME = MPI_WTIME()
       DO ITIME=1,NTIME !fsajfdclaksjdnckajlndaa
         IF((MPI_RANK_P.EQ.0).AND.(MPI_RANK_V.EQ.0)) THEN
@@ -220,9 +240,12 @@
           DTETEST(1)=DTEb
           DTETEST(2)=DTEc
           DTET=MINVAL(DTETEST)
+          PRINT*,'RANK_V=',MPI_RANK_V,&
+     &            'DTEb=',DTEb,'DTEc=',DTEc,'DTE=',DTE
+
           CALL MPI_ALLREDUCE(DTET,DTE,1,MPI_REAL,MPI_MIN,&
      &                  MPI_COMM_V,MPI_IERR)
-          PRINT*,'RANK_V=',MPI_RANK_V,&
+          PRINT*,'AFTER REDUCE RANK_V=',MPI_RANK_V,&
      &            'DTEb=',DTEb,'DTEc=',DTEc,'DTE=',DTE
         ENDIF  
 !
@@ -230,7 +253,7 @@
         CALL MPI_BCAST(DTE,1,MPI_REAL,0,MPI_COMM_P,MPI_IERR) 
 !
 !
-! *** LOOP OVER THE NODES IN VELOCITY SPACE 
+! ***   LOOP OVER THE NODES IN VELOCITY SPACE 
 ! 
         DO 7000 IV=VSPACE_FIRST,VSPACE_LAST
           IF((MPI_RANK_P.EQ.0).AND.((MOD(IV,PRINT_EVERY)).EQ.0))THEN 
@@ -286,7 +309,7 @@
      &       NBNOR,ALPHA,ETA_PP,VNPNT,IV,DISNF_PP,UMEAN_PP,& 
      &       CINF,rv,LCOMM_PP,NGRPS,ISCOM_PP,MPI_RANK_P,NCOMM_PP,VCORD,&
      &       RORDER,TORDER,SDCOM_PP,RGas,M,ITIME,GCOMM,MPI_COMM_P,&
-     &       VSPACE_FIRST,VSPACE_LAST)
+     &       VSPACE_FIRST,VSPACE_LAST,MPI_COMM_SLAVES,SLAVERANK)
 
           IF(MPI_RANK_P.NE.0)THEN !dssserwfjvvfskjfs
 ! ***       MULTIPLY BY DELTA-TIME-POINT 
