@@ -230,7 +230,8 @@
      &                     VSPACE_FIRST,VSPACE_LAST,VCORD,rv)
       OUTPUT_TIMING = MPI_WTIME() - OUTPUT_TIMING
       IF((MPI_RANK_P.EQ.0).AND.(MPI_RANK_V.EQ.0))THEN ! write only on master rank
-          WRITE(*,*) "OUTPUT written in ", OUTPUT_TIMING , "sec"
+          WRITE(*,"(A20,F6.2,A3)") "OUTPUT written in ", OUTPUT_TIMING,&
+     &                             "sec"
       ENDIF
 !
        RETURN 

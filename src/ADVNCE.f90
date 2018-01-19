@@ -432,7 +432,7 @@
 ! 
         ITERTIME2 = MPI_WTIME()
         IF((MPI_RANK_P.EQ.0).AND.(MPI_RANK_V.EQ.0))THEN 
-          WRITE(*,*) "Iteration time:", (ITERTIME2-ITERTIME1)
+          WRITE(*,"(A17,F6.2)") "Iteration time:", (ITERTIME2-ITERTIME1)
         ENDIF
         ITERTIME1 = ITERTIME2
 !       
