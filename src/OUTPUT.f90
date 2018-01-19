@@ -141,7 +141,6 @@
               THETA=ZETA*PI
               CX=RT*COS(THETA)!CONVERT TO CARTESIANS 
               CY=RT*SIN(THETA) 
-              WRITE(*,"(5E15.7)")CX,CY,THETA,RT,rv
               IF((MOD(IV,PRINT_EVERY)).EQ.0)THEN 
                 WRITE(*,"(A23,I5)"),&
      &                   "V-space iteration no.", IV
