@@ -143,7 +143,6 @@
      &           DISND_PP,DISUX_PP,DISUY_PP,DISPS_PP,M,RGas,&
      &           MPI_RANK_V,MPI_SIZE_V,MPI_COMM_V,&
      &           VSPACE_FIRST,VSPACE_LAST)
-        WRITE(*,"(A3,2I5,I15,A15)")"MPI",MPI_RANK_P,MPI_RANK_V,MPI_COMM_V,"H0"
       ENDIF
 ! 
 ! *** CONVERT MACRO_PPs to MACROS 

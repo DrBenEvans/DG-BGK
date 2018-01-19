@@ -45,7 +45,7 @@
       INTEGER maxNELEM_PP  
       INTEGER IPT,J,IE,MPI_IERR,MPI_STATUS(MPI_STATUS_SIZE) 
       INTEGER IE_PP,TAG 
-      INTEGER NPOIN_PP,IPCOM_PP(NPOIN_PP),IV,ELGRP(NELEM,2) 
+      INTEGER NPOIN_PP,IPCOM_PP(NPOIN_PP),IV,IVTRUE,ELGRP(NELEM,2) 
       REAL COORD(2,NPOIN) 
       INTEGER NEGRP(MPI_SIZE_P-1)
 
@@ -133,19 +133,22 @@
             WRITE(*,"(A41,I2)")&
                  &"Writing to file data from vspace part no.", IVP
             DO IV=VSPACE_FIRST,VSPACE_LAST ! 1 to VNPNT_PART for rank 0
+              IVTRUE=IV+IVP*VNPNT_PART
+              ETA=VCORD(1,IVTRUE) 
+              ZETA=VCORD(2,IVTRUE) 
+              WEIGHT=VCORD(3,IVTRUE)
+              RT=ETA*(rv/2)+(rv/2)!MAP BACK TO POLAR COORDINATES 
+              THETA=ZETA*PI
+              CX=RT*COS(THETA)!CONVERT TO CARTESIANS 
+              CY=RT*SIN(THETA) 
+              WRITE(*,"(5E15.7)")CX,CY,THETA,RT,rv
               IF((MOD(IV,PRINT_EVERY)).EQ.0)THEN 
                 WRITE(*,"(A23,I5)"),&
      &                   "V-space iteration no.", IV
               ENDIF
+
               DO IE=1,NELEM
-                ETA=VCORD(1,IV) 
-                ZETA=VCORD(2,IV) 
-                WEIGHT=VCORD(3,IV)
-                RT=ETA*(rv/2)+(rv/2)!MAP BACK TO POLAR COORDINATES 
-                THETA=ZETA*PI
-                CX=RT*COS(THETA)!CONVERT TO CARTESIANS 
-                CY=RT*SIN(THETA) 
-                WRITE(20,*) CX,CY,(DISNF(IN,IV,IE),IN=1,NNODE)
+                WRITE(20,"(I5,5E15.7)")IE,CX,CY,(DISNF(IN,IV,IE),IN=1,NNODE)
               ENDDO
             ENDDO
           ENDIF ! IF(0.EQ.MPI_RANK_V) THEN !dsaaanccmna
