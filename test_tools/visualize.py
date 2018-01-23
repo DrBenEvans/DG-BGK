@@ -11,6 +11,11 @@ try:
     dirname = argv[1]
 except:
     dirname = '.'
+    
+try: 
+    res_frame = int(argv[2])
+except:
+    res_frame = -1
 
 # MESH INFO
 f = open(path.join(dirname,'reentry.plt'))
@@ -66,25 +71,24 @@ all_data = [d.join(r2_df) for d,r2_df in zip(all_data,r2_dfs) ]
 
 x = all_data[0][['x']].values.flatten()
 y = all_data[0][['y']].values.flatten()
-nds = [ data[['ND']].values for data in all_data ]
-Us = [ data[['U']].values for data in all_data ]
-Vs = [ data[['V']].values for data in all_data ]
-RHOs = [ data[['RHO']].values for data in all_data ]
-PSs = [ data[['PS']].values for data in all_data ]
+#nds = [ data[['ND']].values for data in all_data ]
+#Us = [ data[['U']].values for data in all_data ]
+#Vs = [ data[['V']].values for data in all_data ]
+#RHOs = [ data[['RHO']].values for data in all_data ]
+#PSs = [ data[['PS']].values for data in all_data ]
 TEMPs = [ data[['TEMP']].values for data in all_data ]
 
 xi = np.linspace(x.min(),x.max(),800)
 yi = np.linspace(y.min(),y.max(),800)
 
-zi = griddata((x,y),Vs[0].flatten(), (xi[None,:], yi[:,None]), method='linear')
-
-for qname in ['ND','U','V','RHO','PS','TEMP']:
+#for qname in ['ND','U','V','RHO','PS','TEMP']:
+for qname in ['TEMP']:
     qs = [ data[[qname]].values for data in all_data ] 
     plt.figure()
     plt.title(qname)
     for part in parts:
         plt.plot(part[:,0],part[:,1],linestyle='None',marker='+')
-    zi = griddata((x,y),qs[-1].flatten(), (xi[None,:], yi[:,None]), method='linear')
+    zi = griddata((x,y),qs[res_frame].flatten(), (xi[None,:], yi[:,None]), method='nearest')
     plt.contourf(xi,yi,zi,15,cmap=plt.cm.jet)
     plt.colorbar()
 
