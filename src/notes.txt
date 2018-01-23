@@ -242,3 +242,12 @@ Due to the fact that NPROC was passed to PTMESH instead of MPI_SIZE_P.
 
 1. MPI_ERR was missing in MPI_REDUCE in GETRES. 
 
+################################################
+##  OTHER ERRORS  ##############################
+################################################
+
+1. in MACROS the pressure was not computed correctly. 
+The pressure was computed using the arrays DISND,
+DISUX and DISUY but these were not filled with the right values.
+Also, these arrays are also outputs of the subroutine - they were not computed
+correctly.
