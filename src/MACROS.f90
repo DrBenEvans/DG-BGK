@@ -139,6 +139,7 @@
             TMP=0.5*(CXDASH*CXDASH+CYDASH*CYDASH) 
             INTP_ARR(IDX)=INTP_ARR(IDX)+&
      &                      TMP*DISNF_PP(IN,IV,IE)*WEIGHT*JAC*FRAC
+          ENDDO !  DO IV=VSPACE_FIRST,VSPACE_LAST!dfjhasdfa
         ENDDO !  DO IN=1,NNODE  !fjhsdfkgjhccccfflkjdfgs2
       ENDDO !  DO IE=1,NELEM_PP !fdgjshfvsfkskjfvs2
 
