@@ -7,35 +7,27 @@ import glob
 from scipy.interpolate import griddata
 from matplotlib import pyplot as plt
 
-try: 
-    dirname = argv[1]
-except:
-    dirname = '.'
-    
-try: 
-    res_frame = int(argv[2])
-except:
-    res_frame = -1
 
 # MESH INFO
-f = open(path.join(dirname,'reentry.plt'))
+def geom_info(dirname):
+    f = open(path.join(dirname,'reentry.plt'))
+    
+    nxy_data= f.readlines()
+    f.close()
+    start = [ i for i,t in enumerate(nxy_data) if 'coordinates' in t ][0]+1
+    end = [ i for i,t in enumerate(nxy_data) if 'boundary sides' in t ][0]
+    nxy_data = '\n'.join(nxy_data[start:end])
+    nxy_data = np.fromstring(nxy_data,sep=' ').reshape((-1,5))[:,0:3]
+    nxy_df = pd.DataFrame(data=nxy_data[:,1:],index = nxy_data[:,0].astype(np.int),columns=['x','y'])
+    #PARTITIONING INFO
+    part_data = np.loadtxt(glob.glob(path.join(dirname,'reentry.con.npart.*'))[0])
+    pd_df = pd.DataFrame(data=part_data,index = np.arange(1,part_data.size+1), columns = ['P'])
+    
+    return pd_df,nxy_df
 
-nxy_data= f.readlines()
-f.close()
-start = [ i for i,t in enumerate(nxy_data) if 'coordinates' in t ][0]+1
-end = [ i for i,t in enumerate(nxy_data) if 'boundary sides' in t ][0]
-nxy_data = '\n'.join(nxy_data[start:end])
-nxy_data = np.fromstring(nxy_data,sep=' ').reshape((-1,5))[:,0:3]
-xny_df = pd.DataFrame(data=nxy_data[:,1:],index = nxy_data[:,0].astype(np.int),columns=['x','y'])
-#PARTITIONING INFO
-part_data = np.loadtxt(glob.glob(path.join(dirname,'reentry.con.npart.*'))[0])
-pd_df = pd.DataFrame(data=part_data,index = np.arange(1,part_data.size+1), columns = ['P'])
-
-part_dfs = [ pd_df.loc[ pd_df['P'] == i ] for i in range(int(pd_df.values.min()),int(pd_df.values.max()+1))]
-parts = [ part_df.join(xny_df)[['x','y']].values for part_df in part_dfs ]
 
 # RESULTS 
-def parse_results(file_name):
+def parse_results(file_name,columns):
     f = open(file_name)
     r_data = f.readlines()
     f.close()
@@ -47,49 +39,95 @@ def parse_results(file_name):
         data = '\n'.join(r_data[s+1:e])
         data = np.fromstring(data,sep=' ').reshape((-1,4))
         results.append(data)
-    return results
+    res_dfs = [ pd.DataFrame(data=r_data[:,1:],
+                        index = r_data[:,0].astype(np.int),
+                        columns=columns) for r_data in results ] 
 
-r1 = parse_results(path.join(dirname,'RESULTS1.RES'))
-r2 = parse_results(path.join(dirname,'RESULTS2.RES'))
+    return res_dfs
 
-nd = r1[-1][:,1]
-vx = r1[-1][:,2]
-vy = r1[-1][:,3]
-rho  = r2[-1][:,1]
-ps   = r2[-1][:,2]
-temp = r2[-1][:,3]
+def parse_results_all(dirname):
+    r1file_name = path.join(dirname,'RESULTS1.RES')
+    r2file_name = path.join(dirname,'RESULTS2.RES')
+    r1dfs = parse_results(r1file_name,['ND','U','V'])
+    r2dfs = parse_results(r2file_name,['RHO','PS','TEMP'])
 
-r1_dfs = [ pd.DataFrame(data=r1_data[:,1:],
-                        index = r1_data[:,0].astype(np.int),
-                        columns=['ND','U','V']) for r1_data in r1 ] 
+    return [r1.join(r2) for r1,r2 in zip(r1dfs,r2dfs)]
+        
+    
 
-r2_dfs = [ pd.DataFrame(data=r2_data[:,1:],
-                        index = r2_data[:,0].astype(np.int),
-                        columns=['RHO','PS','TEMP']) for r2_data in r2 ] 
-all_data = [xny_df.join(r1_df) for r1_df in r1_dfs ]
-all_data = [d.join(r2_df) for d,r2_df in zip(all_data,r2_dfs) ]
 
-x = all_data[0][['x']].values.flatten()
-y = all_data[0][['y']].values.flatten()
-#nds = [ data[['ND']].values for data in all_data ]
-#Us = [ data[['U']].values for data in all_data ]
-#Vs = [ data[['V']].values for data in all_data ]
-#RHOs = [ data[['RHO']].values for data in all_data ]
-#PSs = [ data[['PS']].values for data in all_data ]
-TEMPs = [ data[['TEMP']].values for data in all_data ]
+def diff(df1,df2):
+    if not np.all(df1.columns == df2.columns):
+        print("Don't compare apples with oranges")
+        print(df1.columns)
+        print(df2.columns)
+        return None
 
-xi = np.linspace(x.min(),x.max(),800)
-yi = np.linspace(y.min(),y.max(),800)
+    d  = df1.values - df2.values
+    s  = np.hypot(df1.values,df2.values)
+    rd = d/s
+    d_df = pd.DataFrame(data=d,index = df1.index, columns = df1.columns)
+    rd_df = pd.DataFrame(data=rd,index = df1.index, columns = df1.columns)
+    return d_df, rd_df
 
-#for qname in ['ND','U','V','RHO','PS','TEMP']:
-for qname in ['TEMP']:
-    qs = [ data[[qname]].values for data in all_data ] 
-    plt.figure()
-    plt.title(qname)
-    for part in parts:
-        plt.plot(part[:,0],part[:,1],linestyle='None',marker='+')
-    zi = griddata((x,y),qs[res_frame].flatten(), (xi[None,:], yi[:,None]), method='nearest')
+
+def plot_stuff(nxy_df,ndata_df,col):
+   
+    xyz_df = nxy_df.join(ndata_df)[['x','y',col]]
+    x = xyz_df['x'].values.flatten()
+    y = xyz_df['y'].values.flatten()
+    z = xyz_df[col].values.flatten()
+    
+    xi = np.linspace(x.min(),x.max(),800)
+    yi = np.linspace(y.min(),y.max(),800)
+ 
+    zi = griddata((x,y),z, (xi[None,:], yi[:,None]), method='nearest')
     plt.contourf(xi,yi,zi,15,cmap=plt.cm.jet)
     plt.colorbar()
+ 
+   
 
-plt.show()
+
+if __name__ == "__main__":
+    try: 
+        dirname = argv[1]
+    except:
+        dirname = '.'
+    try: 
+        res_frame = int(argv[2])
+    except:
+        res_frame = -1
+    pd_df,nxy_df = geom_info(dirname)
+    part_dfs = [ pd_df.loc[ pd_df['P'] == i ] for i in range(int(pd_df.values.min()),int(pd_df.values.max()+1))]
+    parts = [ part_df.join(nxy_df)[['x','y']].values for part_df in part_dfs ]
+     
+    r1_dfs = parse_results(path.join(dirname,'RESULTS1.RES'),['ND','U','V'])
+    r2_dfs = parse_results(path.join(dirname,'RESULTS2.RES'),['RHO','PS','TEMP'])
+    
+    all_data = [nxy_df.join(r1_df) for r1_df in r1_dfs ]
+    all_data = [d.join(r2_df) for d,r2_df in zip(all_data,r2_dfs) ]
+    
+    x = all_data[0][['x']].values.flatten()
+    y = all_data[0][['y']].values.flatten()
+    #nds = [ data[['ND']].values for data in all_data ]
+    #Us = [ data[['U']].values for data in all_data ]
+    #Vs = [ data[['V']].values for data in all_data ]
+    #RHOs = [ data[['RHO']].values for data in all_data ]
+    #PSs = [ data[['PS']].values for data in all_data ]
+    TEMPs = [ data[['TEMP']].values for data in all_data ]
+    
+    xi = np.linspace(x.min(),x.max(),800)
+    yi = np.linspace(y.min(),y.max(),800)
+    
+    #for qname in ['ND','U','V','RHO','PS','TEMP']:
+    for qname in ['TEMP']:
+        qs = [ data[[qname]].values for data in all_data ] 
+        plt.figure()
+        plt.title(qname)
+        for part in parts:
+            plt.plot(part[:,0],part[:,1],linestyle='None',marker='+')
+        zi = griddata((x,y),qs[res_frame].flatten(), (xi[None,:], yi[:,None]), method='nearest')
+        plt.contourf(xi,yi,zi,15,cmap=plt.cm.jet)
+        plt.colorbar()
+    
+    plt.show()
