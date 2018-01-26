@@ -194,7 +194,6 @@
      &                 MPI_RANK_V,MPI_SIZE_V,MPI_COMM_V,&
      &                 VSPACE_FIRST,VSPACE_LAST) 
 
-
 ! *** SYNCHRONISE 
 ! 
       CALL MPI_BARRIER(MPI_COMM_WORLD,MPI_IERR)
@@ -222,12 +221,12 @@
 ! *** OUTPUT FOR GID AND RESTART FILE 
 ! 
       OUTPUT_TIMING = MPI_WTIME()
-      CALL OUTPUT(NNODE ,NPOIN_PP ,NPOIN,NELEM ,NELEM_PP,&
-     &      maxNELEM_PP,COORD,INTMA, DISNF_PP, VNPNT,IPCOM_PP,&
-     &                     ELGRP,NEGRP,IVD,&
-     &                     MPI_RANK_P,MPI_SIZE_P,MPI_COMM_P,&
-     &                     MPI_RANK_V,MPI_SIZE_V,MPI_COMM_V,&
-     &                     VSPACE_FIRST,VSPACE_LAST,VCORD,rv)
+!      CALL OUTPUT(NNODE ,NPOIN_PP ,NPOIN,NELEM ,NELEM_PP,&
+!     &      maxNELEM_PP,COORD,INTMA, DISNF_PP, VNPNT,IPCOM_PP,&
+!     &                     ELGRP,NEGRP,IVD,&
+!     &                     MPI_RANK_P,MPI_SIZE_P,MPI_COMM_P,&
+!     &                     MPI_RANK_V,MPI_SIZE_V,MPI_COMM_V,&
+!     &                     VSPACE_FIRST,VSPACE_LAST,VCORD,rv)
       OUTPUT_TIMING = MPI_WTIME() - OUTPUT_TIMING
       IF((MPI_RANK_P.EQ.0).AND.(MPI_RANK_V.EQ.0))THEN ! write only on master rank
           WRITE(*,"(A20,F6.2,A3)") "OUTPUT written in ", OUTPUT_TIMING,&

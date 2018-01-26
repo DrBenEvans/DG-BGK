@@ -47,7 +47,7 @@
       INTEGER IE_PP,TAG 
       INTEGER NPOIN_PP,IPCOM_PP(NPOIN_PP),IV,IVTRUE,ELGRP(NELEM,2) 
       REAL COORD(2,NPOIN) 
-      INTEGER NEGRP(MPI_SIZE_P-1)
+      INTEGER NEGRP(MPI_SIZE_P)
 
 ! 
       INTEGER INTMA(NNODE,NELEM),PRINT_EVERY
@@ -88,7 +88,7 @@
       IF((MPI_RANK_P.EQ.0).AND.(MPI_RANK_V.EQ.0))THEN 
         WRITE(*,*)"Sending DISNF data to master in MPI_COMM_P..."
       ENDIF
-      DO IG=1,MPI_SIZE_P-1 !
+      DO IG=1,MPI_SIZE_P !
         TSIZE = NEGRP(IG)*3*VNPNT_PART
         IF(MPI_RANK_P.EQ.IG)THEN
           CALL MPI_SEND(DISNF_PP(:,VSPACE_FIRST:VSPACE_LAST,:),&
@@ -96,9 +96,11 @@
      &            MPI_COMM_P,MPI_IERR)
         ENDIF
         IF(MPI_RANK_P.EQ.0)THEN
-          CALL MPI_RECV(DISNF_PP(:,VSPACE_FIRST:VSPACE_LAST,:),&
-     &            TSIZE,MPI_REAL,IG,IG,&
-     &            MPI_COMM_P,MPI_STATUS,MPI_IERR)
+          IF(IG.NE.1) THEN
+            CALL MPI_RECV(DISNF_PP(:,VSPACE_FIRST:VSPACE_LAST,:),&
+     &              TSIZE,MPI_REAL,IG,IG-1,&
+     &              MPI_COMM_P,MPI_STATUS,MPI_IERR)
+          ENDIF
           ! Copying DISNF_PP into DISNF    
           DO IE=1,NELEM ! scanning through DISNF
             ! Checking if we have received the necessary data 

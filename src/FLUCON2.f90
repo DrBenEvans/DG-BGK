@@ -144,7 +144,6 @@
 ! 
       ENDDO ! DO IB=1, NBOUN_PP !djahdfasdfjhalkhdfa
 !
-
       CALL MPI_ALLREDUCE(SUMTOP_ARR,SUMTOPG_ARR,NBOUN_PP,MPI_REAL,&
      &      MPI_SUM,MPI_COMM_V,MPI_IERR)
 

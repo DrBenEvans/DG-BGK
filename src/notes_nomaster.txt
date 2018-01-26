@@ -58,3 +58,10 @@ INTEGER,ALLOCATABLE :: LCOM_PP_CP(:,:)
 
 - GTEQNF 
    nothing to do, rank is useless, removed
+
+###################################
+# Runtime errors found on the phi #
+###################################
+
+- Still MPI_SIZE_P-1 was present in many places in the code
+
