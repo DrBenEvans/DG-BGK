@@ -251,3 +251,7 @@ The pressure was computed using the arrays DISND,
 DISUX and DISUY but these were not filled with the right values.
 Also, these arrays are also outputs of the subroutine - they were not computed
 correctly.
+
+2. It seems that, even in the original code, the results obtained by two different partitions 
+were not consistent with each other. The results seem different (up to 4%, in general a lot less)
+ where two partitions join and close to the edge of the mesh where the object is located. 

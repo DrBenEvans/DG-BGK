@@ -1,0 +1,12 @@
+######################################################################
+## General principles to use in getting rid of master-slave pattern ##
+######################################################################
+
+1. Each array of the kind *_PP is duplicated on the master, with a *_PP_CP
+allocated (and deallocated when necessary).
+2. IG = 1 is the new master.
+3. In MPI calls, all ranks must be now IG-1 instead of IG. Broadcast from 
+master are still from rank 0.
+4. now MPI_SIZE_P is the number of partitions. NGRPS = MPI_SIZE_P and not 
+MPI_SIZE_P-1 anymore.
+
