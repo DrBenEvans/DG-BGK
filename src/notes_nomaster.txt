@@ -50,3 +50,11 @@ INTEGER,ALLOCATABLE :: LCOM_PP_CP(:,:)
 - EDGFLXOPT 
    MPI_COMM_SLAVES -> MPI_COMM_P
    SLAVERANK removed (was not used)
+
+- GETMAC
+   temporary arrays *_PP_CP had to be allocated on master in order to 
+   separate between the arrays received from the other ranks and the array
+   owned by the master itself.
+
+- GTEQNF 
+   nothing to do, rank is useless, removed
