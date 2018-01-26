@@ -119,8 +119,8 @@ if __name__ == "__main__":
     xi = np.linspace(x.min(),x.max(),800)
     yi = np.linspace(y.min(),y.max(),800)
     
-    #for qname in ['ND','U','V','RHO','PS','TEMP']:
-    for qname in ['TEMP']:
+    for qname in ['ND','U','V','RHO','PS','TEMP']:
+    #for qname in ['TEMP']:
         qs = [ data[[qname]].values for data in all_data ] 
         plt.figure()
         plt.title(qname)
