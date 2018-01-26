@@ -64,4 +64,10 @@ INTEGER,ALLOCATABLE :: LCOM_PP_CP(:,:)
 ###################################
 
 - Still MPI_SIZE_P-1 was present in many places in the code
+- Some of the new arrays *_PP_CP were declared as INTEGERS instead of REAL
+- MPI_Recv called on the master when the max DTE was to be determined. Unnecessary.
+
+On 2 processes:
+- issued in GETLOC. Probably error in the way ELGRP(1,i) is set up (+-1 on rank)
+
 

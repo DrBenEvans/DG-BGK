@@ -47,126 +47,117 @@
       INTEGER NPOIN_PP_CP,NBOUN_PP_CP,NCOMM_PP_CP
       INTEGER NSIDE_PP_CP,NELEM_PP_CP
       INTEGER,ALLOCATABLE :: INTMA_PP_CP(:,:),IPCOM_PP_CP(:)
-      INTEGER,ALLOCATABLE :: COORD_PP_CP(:,:),BSIDO_PP_CP(:,:)
-      INTEGER,ALLOCATABLE :: RSIDO_PP_CP(:,:)
-      INTEGER,ALLOCATABLE :: GEOME_PP_CP(:,:),MMAT_PP_CP(:,:)
-      INTEGER,ALLOCATABLE :: CMMAT_PP_CP(:,:,:)
-      INTEGER,ALLOCATABLE :: ISIDE_PP_CP(:,:),NX_PP_CP(:)
-      INTEGER,ALLOCATABLE :: NY_PP_CP(:)
-      INTEGER,ALLOCATABLE :: EL_PP_CP(:),ISCOM_PP_CP(:)
+      INTEGER,ALLOCATABLE ::BSIDO_PP_CP(:,:),ISIDE_PP_CP(:,:)
+      REAL,ALLOCATABLE :: RSIDO_PP_CP(:,:),COORD_PP_CP(:,:)
+      REAL,ALLOCATABLE :: GEOME_PP_CP(:,:),MMAT_PP_CP(:,:)
+      REAL,ALLOCATABLE :: CMMAT_PP_CP(:,:,:),NX_PP_CP(:),NY_PP_CP(:)
+      REAL,ALLOCATABLE :: EL_PP_CP(:)
       INTEGER,ALLOCATABLE :: LCOMM_PP_CP(:),IBCOM_PP_CP(:)
+      INTEGER,ALLOCATABLE :: ISCOM_PP_CP(:)
 !
       IF(MPI_RANK_P.EQ.0)THEN ! vnsdsjkdkja
-      ALLOCATE(INTMA_PP_CP(NNODE,maxNELEM_PP))
-      ALLOCATE(IPCOM_PP_CP(maxNPOIN_PP))
-      ALLOCATE(COORD_PP_CP(2,maxNPOIN_PP))
+        ALLOCATE(INTMA_PP_CP(NNODE,maxNELEM_PP))
+        ALLOCATE(IPCOM_PP_CP(maxNPOIN_PP))
+        ALLOCATE(COORD_PP_CP(2,maxNPOIN_PP))
 
-      DO 10001 IG=1,NGRPS
-! *** NELEM_G IS THE NUMBER OF ELEMENTS IN GROUP OF ELEMENTS IG
-      NELEM_G=NEGRP(IG)
-! *** INTITIALISE INTMA_PP,IPCOM_PP AND IBCOM_PP
-      CO=0
-      CALL IFILLM(INTMA_PP,NNODE,NELEM_G,CO)
-      CALL IFILLV(IPCOM_PP,maxNPOIN_pp,CO)
+        DO 10001 IG=1,NGRPS
+! ***     NELEM_G IS THE NUMBER OF ELEMENTS IN GROUP OF ELEMENTS IG
+          NELEM_G=NEGRP(IG)
+! ***     INTITIALISE INTMA_PP,IPCOM_PP AND IBCOM_PP
+          CO=0
+          CALL IFILLM(INTMA_PP,NNODE,NELEM_G,CO)
+          CALL IFILLV(IPCOM_PP,maxNPOIN_pp,CO)
 !
-      FLAG=1 ! local point index
-      I=0
+          FLAG=1 ! local point index
+          I=0
 !
-      DO 1001 IE=1,NELEM_G    !LOOP OVER THE PROCESSOR'S ELEMENTS          
- 1002 CONTINUE
-      I=I+1
-      IGT=ELGRP(I,1)
-      IF(IG.EQ.IGT)THEN
-      IEG=ELGRP(I,2)
-      IP1=INTMA(1,I)
-      IP2=INTMA(2,I)
-      IP3=INTMA(3,I)
+          DO 1001 IE=1,NELEM_G    !LOOP OVER THE PROCESSOR'S ELEMENTS          
+ 1002       CONTINUE
+            I=I+1
+            IGT=ELGRP(I,1)
+            IF(IG.EQ.IGT)THEN
+              IEG=ELGRP(I,2)
+              IP1=INTMA(1,I)
+              IP2=INTMA(2,I)
+              IP3=INTMA(3,I)
+! ***         FILL IN IPCOM_PP_CP AND INTMA_PP_CP
+              ! scan the local point array to find IP1 in IPCOM_PP_CP
+              DO 1003 IP_PP=1,maxNPOIN_pp
+                IP=IPCOM_PP_CP(IP_PP)
+                IF(IP.EQ.IP1)THEN     ! IP1 found
+                  WRITE(*,*)"DIOCANE",IEG
+                  INTMA_PP_CP(1,IEG)=IP_PP 
+                  GOTO 2000
+                ENDIF
+ 1003         CONTINUE              ! IP1 not found
+              INTMA_PP_CP(1,IEG)=FLAG
+              IPCOM_PP_CP(FLAG)=IP1    ! add it to IPCOM_PP_CP
+              FLAG=FLAG+1
+              IF(FLAG.GT.maxNPOIN_pp)THEN
+                WRITE(*,101);WRITE(*,102);STOP
+              ENDIF
+ 2000         CONTINUE
+              ! scan the local point array to find IP2 in IPCOM_PP_CP
+              DO 1004 IP_PP=1,maxNPOIN_pp
+                IP=IPCOM_PP_CP(IP_PP)
+                IF(IP.EQ.IP2)THEN     ! IP2 found
+                  INTMA_PP_CP(2,IEG)=IP_PP
+                  GOTO 2001
+                ENDIF
+ 1004         CONTINUE              ! IP2 not found
+              INTMA_PP_CP(2,IEG)=FLAG
+              IPCOM_PP_CP(FLAG)=IP2    ! add it to IPCOM_PP_CP
+              FLAG=FLAG+1
+              IF(FLAG.GT.maxNPOIN_pp)THEN
+                WRITE(*,101);WRITE(*,102);STOP
+              ENDIF
+ 2001         CONTINUE
 !
-! *** FILL IN IPCOM_PP_CP AND INTMA_PP_CP
-!
-      ! scan the local point array to find IP1 in IPCOM_PP_CP
-      DO 1003 IP_PP=1,maxNPOIN_pp
-      IP=IPCOM_PP_CP(IP_PP)
-      IF(IP.EQ.IP1)THEN     ! IP1 found
-      INTMA_PP_CP(1,IEG)=IP_PP 
-      GOTO 2000
-      ENDIF
- 1003 CONTINUE              ! IP1 not found
-      INTMA_PP_CP(1,IEG)=FLAG
-      IPCOM_PP_CP(FLAG)=IP1    ! add it to IPCOM_PP_CP
-      FLAG=FLAG+1
-      IF(FLAG.GT.maxNPOIN_pp)THEN
-      WRITE(*,101);WRITE(*,102);STOP
-      ENDIF
- 2000 CONTINUE
-!
-      ! scan the local point array to find IP2 in IPCOM_PP_CP
-      DO 1004 IP_PP=1,maxNPOIN_pp
-      IP=IPCOM_PP_CP(IP_PP)
-      IF(IP.EQ.IP2)THEN     ! IP2 found
-      INTMA_PP_CP(2,IEG)=IP_PP
-      GOTO 2001
-      ENDIF
- 1004 CONTINUE              ! IP2 not found
-      INTMA_PP_CP(2,IEG)=FLAG
-      IPCOM_PP_CP(FLAG)=IP2    ! add it to IPCOM_PP_CP
-      FLAG=FLAG+1
-      IF(FLAG.GT.maxNPOIN_pp)THEN
-      WRITE(*,101);WRITE(*,102);STOP
-      ENDIF
- 2001 CONTINUE
-!
-      ! scan the local point array to find IP3 in IPCOM_PP_CP
-      DO 1005 IP_PP=1,maxNPOIN_pp
-      IP=IPCOM_PP_CP(IP_PP)
-      IF(IP.EQ.IP3)THEN      ! IP3 found
-      INTMA_PP_CP(3,IEG)=IP_PP
-      GOTO 2002
-      ENDIF
- 1005 CONTINUE               ! IP3 not found
-      INTMA_PP_CP(3,IEG)=FLAG
-      IPCOM_PP_CP(FLAG)=IP3     ! add it to IPCOM_PP_CP
-      FLAG=FLAG+1
-      IF(FLAG.GT.maxNPOIN_pp)THEN
-      WRITE(*,101);WRITE(*,102);STOP
-      ENDIF
- 2002 CONTINUE
-      ELSE ! RELATED TO IF(IG.EQ.IGT)
-      GOTO 1002 ! BASICALLY "CYCLE", USELESS
-      ENDIF! RELATED TO IF(IG.EQ.IGT)
+              ! scan the local point array to find IP3 in IPCOM_PP_CP
+              DO 1005 IP_PP=1,maxNPOIN_pp
+                IP=IPCOM_PP_CP(IP_PP)
+                IF(IP.EQ.IP3)THEN      ! IP3 found
+                  INTMA_PP_CP(3,IEG)=IP_PP
+                  GOTO 2002
+                ENDIF
+ 1005         CONTINUE               ! IP3 not found
+              INTMA_PP_CP(3,IEG)=FLAG
+              IPCOM_PP_CP(FLAG)=IP3     ! add it to IPCOM_PP_CP
+              FLAG=FLAG+1
+              IF(FLAG.GT.maxNPOIN_pp)THEN
+                WRITE(*,101);WRITE(*,102);STOP
+              ENDIF
+ 2002         CONTINUE
+            ELSE ! RELATED TO IF(IG.EQ.IGT)
+              GOTO 1002 ! BASICALLY "CYCLE", USELESS
+            ENDIF! RELATED TO IF(IG.EQ.IGT)
 
-!
-! *** END LOOP OVER PROCESSOR ELEMENTS
-!
- 1001 CONTINUE
-      NELEM_PP_CP=NEGRP(IG)
-      NPOIN_PP_CP=FLAG-1
-      NPGRP(IG)=NPOIN_PP_CP            
-!
-! *** MPI COMMAND TO SEND NPOIN_PP_CP,INTMA_PP_CP AND IPCOM_PP_CP TO PROCESSOR RANK IG !!!!!!!!!!!!!!!
-!	
-      TAG1=1
-      SIZE1=1
-      TAG2=2
-      SIZE2=NNODE*NELEM_PP_CP
-      TAG3=3
-      SIZE3=maxNPOIN_PP
-      IF(IG.NE.1)THEN
-        CALL MPI_SEND(NPOIN_PP_CP,SIZE1,MPI_INTEGER,IG-1,TAG1,&
-     &         MPI_COMM_P,MPI_IERR)
-        CALL MPI_SEND(INTMA_PP_CP,SIZE2,MPI_INTEGER,IG-1,TAG2,&
-     &          MPI_COMM_P,MPI_IERR)
-        CALL MPI_SEND(IPCOM_PP_CP,SIZE3,MPI_INTEGER,IG-1,TAG3,&
-     &            MPI_COMM_P,MPI_IERR)
-      ELSE
-        NPOIN_PP = NPOIN_PP_CP
-        INTMA_PP = INTMA_PP_CP
-        DEALLOCATE(INTMA_PP_CP)
-        IPCOM_PP = IPCOM_PP_CP
-      ENDIF
-
-!
-10001 CONTINUE
+! ***       END LOOP OVER PROCESSOR ELEMENTS
+ 1001     CONTINUE
+          NELEM_PP_CP=NEGRP(IG)
+          NPOIN_PP_CP=FLAG-1
+          NPGRP(IG)=NPOIN_PP_CP            
+! ***     MPI COMMAND TO SEND NPOIN_PP_CP,INTMA_PP_CP AND IPCOM_PP_CP TO PROCESSOR RANK IG !!!!!!!!!!!!!!!
+          TAG1=1
+          SIZE1=1
+          TAG2=2
+          SIZE2=NNODE*NELEM_PP_CP
+          TAG3=3
+          SIZE3=maxNPOIN_PP
+          IF(IG.NE.1)THEN
+            CALL MPI_SEND(NPOIN_PP_CP,SIZE1,MPI_INTEGER,IG-1,TAG1,&
+     &             MPI_COMM_P,MPI_IERR)
+            CALL MPI_SEND(INTMA_PP_CP,SIZE2,MPI_INTEGER,IG-1,TAG2,&
+     &              MPI_COMM_P,MPI_IERR)
+            CALL MPI_SEND(IPCOM_PP_CP,SIZE3,MPI_INTEGER,IG-1,TAG3,&
+     &                MPI_COMM_P,MPI_IERR)
+          ELSE
+            NPOIN_PP = NPOIN_PP_CP
+            INTMA_PP = INTMA_PP_CP
+            DEALLOCATE(INTMA_PP_CP)
+            IPCOM_PP = IPCOM_PP_CP
+          ENDIF
+10001   CONTINUE
       ENDIF ! RELATED TO IF(MPI_RANK_P.EQ.0)  vnsdsjkdkja
 !      CALL MPI_BARRIER(MPI_COMM_P,MPI_IERR)
 !
@@ -174,7 +165,7 @@
         TAG1=1
         SIZE1=1
         TAG2=2
-        SIZE2=NNODE*NELEM_PP_CP
+        SIZE2=NNODE*NELEM_PP
         CALL MPI_RECV(NPOIN_PP,SIZE1,MPI_INTEGER,0,& 
      &           TAG1,MPI_COMM_P,MPI_STATUS,MPI_IERR )
         CALL MPI_RECV(INTMA_PP,SIZE2,MPI_INTEGER,0,& 
@@ -262,38 +253,38 @@
             IE=BSIDO(3,IB)
             RANK=ELGRP(IE,1)
             IF(RANK.EQ.IG)THEN
-            FLAG=FLAG+1
-            IF(FLAG.GT.maxNBOUN_PP)THEN
-            WRITE(*,103);WRITE(*,104);STOP
-            ENDIF
-            NPOIN_PP_CP=NPGRP(IG)
-            DO I=1,NPOIN_PP_CP ! scan for BSIDO(1,IB) om IPCOM_PP
-            IPT=IPCOM_PP(I)
-            IP=BSIDO(1,IB)
-            IF(IP.EQ.IPT)THEN ! found 
-            BSIDO_PP_CP(1,FLAG)=I
-            GOTO 1030
-            ENDIF
-            ENDDO
- 1030       CONTINUE
-            DO I=1,NPOIN_PP_CP  ! scan for BSIDO(1,IB) om IPCOM_PP
-            IPT=IPCOM_PP(I)
-            IP=BSIDO(2,IB)
-            IF(IP.EQ.IPT)THEN ! found
-            BSIDO_PP_CP(2,FLAG)=I
-            GOTO 1031
-            ENDIF
-            ENDDO
- 1031       CONTINUE
-            IEL=BSIDO(3,IB)
-            BSIDO_PP_CP(3,FLAG)=ELGRP(IEL,2)
-            BSIDO_PP_CP(4,FLAG)=BSIDO(4,IB)
-            BSIDO_PP_CP(5,FLAG)=BSIDO(5,IB)
-            BSIDO_PP_CP(6,FLAG)=BSIDO(6,IB)
-            DO I=1,NBNOR
-            RSIDO_PP_CP(I,FLAG)=RSIDO(I,IB)
-            ENDDO
-            IBCOM_PP_CP(FLAG)=IB
+              FLAG=FLAG+1
+              IF(FLAG.GT.maxNBOUN_PP)THEN
+                WRITE(*,103);WRITE(*,104);STOP
+              ENDIF
+              NPOIN_PP_CP=NPGRP(IG)
+              DO I=1,NPOIN_PP_CP ! scan for BSIDO(1,IB) om IPCOM_PP
+                IPT=IPCOM_PP(I)
+                IP=BSIDO(1,IB)
+                IF(IP.EQ.IPT)THEN ! found 
+                  BSIDO_PP_CP(1,FLAG)=I
+                  GOTO 1030
+                ENDIF
+              ENDDO
+ 1030         CONTINUE
+              DO I=1,NPOIN_PP_CP  ! scan for BSIDO(1,IB) om IPCOM_PP
+                IPT=IPCOM_PP(I)
+                IP=BSIDO(2,IB)
+                IF(IP.EQ.IPT)THEN ! found
+                  BSIDO_PP_CP(2,FLAG)=I
+                  GOTO 1031
+                ENDIF
+              ENDDO
+ 1031         CONTINUE
+              IEL=BSIDO(3,IB)
+              BSIDO_PP_CP(3,FLAG)=ELGRP(IEL,2)
+              BSIDO_PP_CP(4,FLAG)=BSIDO(4,IB)
+              BSIDO_PP_CP(5,FLAG)=BSIDO(5,IB)
+              BSIDO_PP_CP(6,FLAG)=BSIDO(6,IB)
+              DO I=1,NBNOR
+                RSIDO_PP_CP(I,FLAG)=RSIDO(I,IB)
+              ENDDO
+              IBCOM_PP_CP(FLAG)=IB
             ENDIF
  1007     CONTINUE
           NBOUN_PP_CP=FLAG

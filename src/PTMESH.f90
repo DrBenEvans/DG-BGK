@@ -122,15 +122,15 @@
 ! *** LOOP OVER THE ELEMENTS TO DETERMINE THE ELEMENT PARTITION 
 ! 
       DO 103 IE=1,NELEM 
-      IP1=INTMA(1,IE) 
-      IP2=INTMA(2,IE) 
-      IP3=INTMA(3,IE) 
-      G1=NODPT(IP1) 
-      G2=NODPT(IP2) 
-      G3=NODPT(IP3) 
-      GE=MAX(G1,G2,G3) 
-      ELGRP(IE,1)=GE 
-      NEGRP(GE)=NEGRP(GE)+1 
+        IP1=INTMA(1,IE) 
+        IP2=INTMA(2,IE) 
+        IP3=INTMA(3,IE) 
+        G1=NODPT(IP1) 
+        G2=NODPT(IP2) 
+        G3=NODPT(IP3) 
+        GE=MAX(G1,G2,G3) 
+        ELGRP(IE,1)=GE 
+        NEGRP(GE)=NEGRP(GE)+1 
  103  CONTINUE 
       ENDIF     ! END IF MPI_RANK_P.EQ.0  fkjfhkafda
 ! 
