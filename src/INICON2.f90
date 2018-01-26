@@ -56,7 +56,7 @@
       ! mpi-stuff for velocity space partitioning
       INTEGER MPI_RANK_V,MPI_SIZE_V,MPI_COMM_V,GROUP_V
       INTEGER VSPACE_FIRST,VSPACE_LAST
-      INTEGER NRANK_P
+      INTEGER NPART_P
 
 
 
@@ -126,18 +126,18 @@
             IF(MPI_RANK_P.EQ.0)THEN !flkjdssssssyy
               READ(11,*) (DISNFPARCEL(I),I=1,NNODE) 
 ! ***         CHECK THE SLAVE ALLOCATION OF THIS ELEMENT 
-              NRANK_P=ELGRP(IE,1) 
+              NPART_P=ELGRP(IE,1) 
               IE_PP=ELGRP(IE,2) 
             ENDIF !flkjdssssssyy
 ! ***       BROADCAST 
             IF((IV.GE.VSPACE_FIRST).AND.(IV.LE.VSPACE_LAST))THEN !dsfkjshd
-              CALL MPI_BCAST(NRANK_P,1,MPI_INTEGER,0,& 
+              CALL MPI_BCAST(NPART_P,1,MPI_INTEGER,0,& 
      &                    MPI_COMM_P,MPI_IERR) 
               CALL MPI_BCAST(IE_PP,1,MPI_INTEGER,0,& 
      &                    MPI_COMM_P,MPI_IERR) 
               CALL MPI_BCAST(DISNFPARCEL,NNODE,MPI_REAL,0,& 
      &                    MPI_COMM_P,MPI_IERR) 
-              IF(MPI_RANK_P.EQ.NRANK_P)THEN !fldjssmfslms
+              IF((MPI_RANK_P+1).EQ.NPART_P)THEN !fldjssmfslms
                 DO IN=1,NNODE 
                   DISNF_PP(IN,IV,IE_PP)=DISNFPARCEL(IN) 
                 ENDDO 
@@ -174,43 +174,41 @@
 !
 ! ***   BEGIN LOOP OVER THE PHYSICAL SPACE DISCONTINUOUS NODES 
 !
-        IF(MPI_RANK_P.NE.0)THEN
 !
-! ***     IF VACCUUM FOR INTITIAL CONDITION 
+! ***   IF VACCUUM FOR INTITIAL CONDITION 
+!       
+        IF(n1.GE.1e-20)THEN !djfhadcpaaaargekj
+          DO 1006 IE=1,NELEM_PP 
+            DO 1007 IN=1,NNODE 
 !         
-          IF(n1.GE.1e-20)THEN !djfhadcpaaaargekj
-            DO 1006 IE=1,NELEM_PP 
-              DO 1007 IN=1,NNODE 
-!           
-! ***           LOOP OVER ALL VELOCITY SPACE NODES 
-!           
-                CO=(BETA1**2)/(PI)            !COEFFICIENT OF THE MAXWELL DISTRIBUTION FUNCTION 
-                DO 1002 INV=VSPACE_FIRST,VSPACE_LAST
-                  ETA=VCORD(1,INV)
-                  ZETA=VCORD(2,INV)
-!                 TRANSFORM FROM ETA-ZETA COORDS TO R-THETA COORDS
-                  R=ETA*(rv/2)+(rv/2)
-                  THETA=ZETA*PI
-!                 TRANSORM TO CARTESIANS
-                  UX=R*COS(THETA)
-                  UY=R*SIN(THETA)
-                  TMP=(UX-U0)*(UX-U0)+(UY-V0)*(UY-V0)         
-                  SPEED=SQRT(TMP)     !MOLECULAR SPEED AT THIS COORDINATE IN VELSPACE MESH 
-                  TMP=-((BETA1**2)*(SPEED**2)) 
-                  F0=CO*EXP(TMP)         !DISTRIBUTION FUNCTION
-                  DISNF_PP(IN,INV,IE)=n1*F0!INITIAL CONDITION (nf) MATRIX 
-!           
-! ***             END LOOP OVER VELOCITY SPACE NODES 
-!           
- 1002           CONTINUE 
-!           
-! ***           END LOOP OVER THE PHYSICAL SPACE DISCONTINUOUS NODES 
-!           
- 1007         CONTINUE  
- 1006       CONTINUE  
-!           
-          ENDIF  ! IF(n1.GE.1e-20)THEN !djfhadcpaaaargekj
-        ENDIF
+! ***         LOOP OVER ALL VELOCITY SPACE NODES 
+!         
+              CO=(BETA1**2)/(PI)            !COEFFICIENT OF THE MAXWELL DISTRIBUTION FUNCTION 
+              DO 1002 INV=VSPACE_FIRST,VSPACE_LAST
+                ETA=VCORD(1,INV)
+                ZETA=VCORD(2,INV)
+!               TRANSFORM FROM ETA-ZETA COORDS TO R-THETA COORDS
+                R=ETA*(rv/2)+(rv/2)
+                THETA=ZETA*PI
+!               TRANSORM TO CARTESIANS
+                UX=R*COS(THETA)
+                UY=R*SIN(THETA)
+                TMP=(UX-U0)*(UX-U0)+(UY-V0)*(UY-V0)         
+                SPEED=SQRT(TMP)     !MOLECULAR SPEED AT THIS COORDINATE IN VELSPACE MESH 
+                TMP=-((BETA1**2)*(SPEED**2)) 
+                F0=CO*EXP(TMP)         !DISTRIBUTION FUNCTION
+                DISNF_PP(IN,INV,IE)=n1*F0!INITIAL CONDITION (nf) MATRIX 
+!         
+! ***           END LOOP OVER VELOCITY SPACE NODES 
+!         
+ 1002         CONTINUE 
+!         
+! ***         END LOOP OVER THE PHYSICAL SPACE DISCONTINUOUS NODES 
+!         
+ 1007       CONTINUE  
+ 1006     CONTINUE  
+!         
+        ENDIF  ! IF(n1.GE.1e-20)THEN !djfhadcpaaaargekj
 !
 ! ***   SYNCHRONISE PROCESSORS 
 !

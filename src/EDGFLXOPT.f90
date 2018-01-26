@@ -4,8 +4,7 @@
      &               IV,DISNF,UMEAN,CINF,rv,LCOMM_PP,& 
      &             NGRPS,ISCOM_PP,MPI_RANK_P,NCOMM_PP,VCORD,RORDER,&
      &              TORDER,SDCOM_PP,R,M,ITIME,GCOMM,MPI_COMM_P,&
-     &                     VSPACE_FIRST,VSPACE_LAST,&
-     &                     MPI_COMM_SLAVES,SLAVERANK)
+     &                     VSPACE_FIRST,VSPACE_LAST)
 ! 
 ! *** SUBROUTINE TO CALCULATE THE FLUXES TRANSFERRED BETWEEN ELEMENTS AT EDGES 
 ! 
@@ -43,8 +42,6 @@
       REAL :: RECV_EDGE_DATA(5000)!
       INTEGER :: SEND_EDGE_DATA_IDX(5000)! LOCAL EDGE INDICES ON OPPOSITE MPI_RANK_P    
       INTEGER :: RECV_EDGE_DATA_IDX(5000)! LOCAL EDGE INDICES ON CURRENT MPI_RANK_P
-      INTEGER :: MPI_COMM_SLAVES ! SLAVES COMMUNICATOR
-      INTEGER :: SLAVERANK 
       INTEGER :: EDGCOUNT
 
       DATA MMAT/2.0,1.0,1.0,2.0/ 
@@ -145,7 +142,7 @@
               STOP
             ENDIF                 !DEBUG
             OPPSLAVERANK = SDCOM_PP(3,EDGCOUNT) - 1 ! ranks in the 
-                                              ! MPI_COMM_SLAVES communicator
+                                              ! MPI_COMM_P communicator
                                               ! are the rank in
                                               ! MPI_COMM_P communicator
                                               ! decreased by 1
@@ -207,11 +204,11 @@
      
         CALL MPI_ALLTOALL(SEND_LENGTHS,1,MPI_INTEGER,&
      &               RECV_LENGTHS,1,MPI_INTEGER,&
-     &               MPI_COMM_SLAVES,MPI_IERR)
-!        CALL MPI_BARRIER(MPI_COMM_SLAVES,MPI_IERR)! DEBUG
+     &               MPI_COMM_P,MPI_IERR)
+!        CALL MPI_BARRIER(MPI_COMM_P,MPI_IERR)! DEBUG
 !        WRITE(*,"(A10,8I5.1)") "NEWSEND", MPI_RANK_P, SEND_LENGTHS !DEBUG
 !        WRITE(*,"(A10,8I5.1)") "NEWRECV", MPI_RANK_P, RECV_LENGTHS !DEBUG
-!        CALL MPI_BARRIER(MPI_COMM_SLAVES,MPI_IERR) !DEBUG
+!        CALL MPI_BARRIER(MPI_COMM_P,MPI_IERR) !DEBUG
 !
         SEND_LENGTHS2 = 2*SEND_LENGTHS
         RECV_LENGTHS2 = 2*RECV_LENGTHS
@@ -219,13 +216,13 @@
      &        SENDRECV_START_OFFSETS2,MPI_REAL,&
      &        RECV_EDGE_DATA,RECV_LENGTHS2,&
      &        SENDRECV_START_OFFSETS2,MPI_REAL,&
-     &        MPI_COMM_SLAVES,MPI_IERR)
+     &        MPI_COMM_P,MPI_IERR)
 
         CALL MPI_ALLTOALLV(SEND_EDGE_DATA_IDX,SEND_LENGTHS,&
      &        SENDRECV_START_OFFSETS,MPI_INTEGER,&
      &        RECV_EDGE_DATA_IDX,RECV_LENGTHS,&
      &        SENDRECV_START_OFFSETS,MPI_INTEGER,&
-     &        MPI_COMM_SLAVES,MPI_IERR)
+     &        MPI_COMM_P,MPI_IERR)
 
         DO IG=1,NGRPS
           DO OFFSET=SENDRECV_START_OFFSETS(IG),&

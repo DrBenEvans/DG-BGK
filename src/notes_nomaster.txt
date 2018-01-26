@@ -10,3 +10,43 @@ master are still from rank 0.
 4. now MPI_SIZE_P is the number of partitions. NGRPS = MPI_SIZE_P and not 
 MPI_SIZE_P-1 anymore.
 
+########################################################
+# list of arrays and variables that got the treatment  #
+#           *_PP -> *_PP, *_PP_CP                      #
+########################################################
+
+# in GETLOC.f90
+INTEGER NPOIN_PP_CP,NBOUN_PP_CP,NCOMM_PP_CP
+INTEGER,ALLOCATABLE :: INTMA_PP_CP(:,:),IPCOM_PP_CP(:)
+INTEGER,ALLOCATABLE :: COORD_PP_CP(:,:),BSIDO_PP_CP(:,:)
+INTEGER,ALLOCATABLE :: RSIDO_PP_CP(:,:)
+INTEGER,ALLOCATABLE :: GEOME_PP_CP(:,:),MMAT_PP_CP(:,:)
+INTEGER,ALLOCATABLE :: CMMAT_PP_CP(:,:,:)
+INTEGER,ALLOCATABLE :: ISIDE_PP_CP(:,:),NX_PP_CP(:),NY_PP_CP(:,:)
+INTEGER,ALLOCATABLE :: EL_PP_CP(:,:),ISCOM_PP_CP(:,:)
+INTEGER,ALLOCATABLE :: LCOM_PP_CP(:,:)
+
+#######################################################
+# notes ###############################################
+#######################################################
+
+- PTMESH
+
+- GETLOC
+    a lot of places where the master-slave pattern was used.
+    
+- EDGCOM 
+    no real master-slave patter is used. only to shift shift rank numbers
+    to match partition numbers.
+
+- INICON2 (and INICON)
+    Only used broadcasts. code is invariant, except that we need to 
+    remove the IF(MPI_RANK_P.NE.0) in a place only.
+   
+- ADVNCE
+   removing MPI_COMM_SLAVES and the like 
+   removing the IF(MPI_RANK_P.NE.0) in several place.
+
+- EDGFLXOPT 
+   MPI_COMM_SLAVES -> MPI_COMM_P
+   SLAVERANK removed (was not used)

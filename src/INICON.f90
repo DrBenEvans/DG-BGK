@@ -33,7 +33,7 @@
       INTEGER IN,INV,RS,IV,IP,NELEM,NPOIN,NNODE,maxNELEM_PP 
       INTEGER IE,TAG,IP_PP,I,IE_PP,NELEM_PP 
       INTEGER VNPNT,NPOIN_pp,IPT,INTMA_PP(NNODE,NELEM_PP) 
-      INTEGER TEST1,TEST2,NRANK,IPCOM_PP(NPOIN_PP) 
+      INTEGER TEST1,TEST2,NPART,IPCOM_PP(NPOIN_PP) 
       INTEGER ELGRP(NELEM,2),MPI_IERR,MPI_STATUS 
 ! 
       REAL VCORD(3,VNPNT),COORD_PP(2,NPOIN_PP) 
@@ -106,18 +106,18 @@
             IF(MPI_RANK_P.EQ.0)THEN !qqwerqwerqw
               READ(11,*) (DISNFPARCEL(I),I=1,NNODE) 
 ! ***     CHECK THE SLAVE ALLOCATION OF THIS ELEMENT 
-              NRANK=ELGRP(IE,1) 
+              NPART=ELGRP(IE,1) 
               IE_PP=ELGRP(IE,2) 
             ENDIF   !qqwerqwerqw
 ! ***     BROADCAST 
             IF((IV.GE.VSPACE_FIRST).AND.(IV.LE.VSPACE_LAST))THEN !dsfkjshd
-              CALL MPI_BCAST(NRANK,1,MPI_INTEGER,0,& 
+              CALL MPI_BCAST(NPART,1,MPI_INTEGER,0,& 
      &          MPI_COMM_P,MPI_IERR) 
               CALL MPI_BCAST(IE_PP,1,MPI_INTEGER,0,& 
      &          MPI_COMM_P,MPI_IERR) 
               CALL MPI_BCAST(DISNFPARCEL,NNODE,MPI_REAL,0,& 
      &          MPI_COMM_P,MPI_IERR) 
-              IF(MPI_RANK_P.EQ.NRANK)THEN !ljvvkjkddfgd
+              IF((MPI_RANK_P+1).EQ.NPART)THEN !ljvvkjkddfgd
                 DO IN=1,NNODE 
                   DISNF_PP(IN,IV,IE_PP)=DISNFPARCEL(IN) 
                 ENDDO 
@@ -160,7 +160,6 @@
 ! 
 ! ***   BEGIN LOOP OVER THE PHYSICAL SPACE DISCONTINUOUS NODES 
 !
-        IF(MPI_RANK_P.NE.0)THEN !dsdkcnskjdcnaaaayy
           DO 1005 IE=1,NELEM_PP
             DO 1006 IN=1,NNODE 
               IP_PP=INTMA_PP(IN,IE) 
@@ -202,7 +201,6 @@
  1006       CONTINUE
  1005     CONTINUE
 !
-        ENDIF ! IF(MPI_RANK_P.NE.0)THEN !dsdkcnskjdcnaaaayy
       ENDIF !  IF(RS.EQ.1)THEN ! sdflgjsdfglkjsfdgs
 ! 
 ! *** FORMAT STATEMENTS 
