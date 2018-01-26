@@ -65,8 +65,8 @@
           NELEM_G=NEGRP(IG)
 ! ***     INTITIALISE INTMA_PP,IPCOM_PP AND IBCOM_PP
           CO=0
-          CALL IFILLM(INTMA_PP,NNODE,NELEM_G,CO)
-          CALL IFILLV(IPCOM_PP,maxNPOIN_pp,CO)
+          CALL IFILLM(INTMA_PP_CP,NNODE,NELEM_G,CO)
+          CALL IFILLV(IPCOM_PP_CP,maxNPOIN_pp,CO)
 !
           FLAG=1 ! local point index
           I=0
@@ -85,7 +85,6 @@
               DO 1003 IP_PP=1,maxNPOIN_pp
                 IP=IPCOM_PP_CP(IP_PP)
                 IF(IP.EQ.IP1)THEN     ! IP1 found
-                  WRITE(*,*)"DIOCANE",IEG
                   INTMA_PP_CP(1,IEG)=IP_PP 
                   GOTO 2000
                 ENDIF
@@ -154,10 +153,10 @@
           ELSE
             NPOIN_PP = NPOIN_PP_CP
             INTMA_PP = INTMA_PP_CP
-            DEALLOCATE(INTMA_PP_CP)
             IPCOM_PP = IPCOM_PP_CP
           ENDIF
 10001   CONTINUE
+        DEALLOCATE(INTMA_PP_CP)
       ENDIF ! RELATED TO IF(MPI_RANK_P.EQ.0)  vnsdsjkdkja
 !      CALL MPI_BARRIER(MPI_COMM_P,MPI_IERR)
 !
@@ -192,7 +191,7 @@
           ELSE
             IPCOM_PP_CP = IPCOM_PP
           ENDIF
-          CALL RFILLM(COORD_PP,2,maxNPOIN_PP,COO)
+          CALL RFILLM(COORD_PP_CP,2,maxNPOIN_PP,COO)
 !
           NPOIN_PP_CP=NPGRP(IG)
           DO 1006 IP_PP=1,NPOIN_PP_CP
@@ -212,9 +211,9 @@
      &             TAG4,MPI_COMM_P,MPI_IERR )
           ELSE
               COORD_PP = COORD_PP_CP
-              DEALLOCATE(COORD_PP_CP)
           ENDIF  
 10003   CONTINUE
+        DEALLOCATE(COORD_PP_CP)
       ENDIF  ! IF(MPI_RANK_P.EQ.0)THEN !ccmfcjskha
 !
       IF(MPI_RANK_P.NE.0)THEN ! ccmdxkaljfa
@@ -311,13 +310,13 @@
           ELSE 
             NBOUN_PP = NBOUN_PP_CP
             BSIDO_PP = BSIDO_PP_CP
-            DEALLOCATE(BSIDO_PP_CP)
             RSIDO_PP = RSIDO_PP_CP
-            DEALLOCATE(RSIDO_PP_CP)
             IBCOM_PP = IBCOM_PP_CP
-            DEALLOCATE(IBCOM_PP_CP)
           ENDIF
 10005   CONTINUE
+        DEALLOCATE(BSIDO_PP_CP)
+        DEALLOCATE(RSIDO_PP_CP)
+        DEALLOCATE(IBCOM_PP_CP)
       ENDIF    ! IF(MPI_RANK_P.EQ.0)THEN  ! diescaa
 !
       IF(MPI_RANK_P.NE.0)THEN  !dsjkhadfxx
