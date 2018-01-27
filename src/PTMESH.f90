@@ -151,34 +151,31 @@
       IF(IG.NE.1)THEN 
         CALL MPI_SEND(NELEM_PP_CP,1,MPI_INTEGER,IG-1,100,& 
      &       MPI_COMM_P,MPI_IERR) 
+      ELSE
+        NELEM_PP = NELEM_PP_CP
       ENDIF
-! 
       ENDIF   !LINKS WITH IF STATEMENT ON LINE 94 
 ! 
 ! *** RECEIVE NELEM_PP ON PROC MPI_RANK_P IG 
 ! 
-      IF((MPI_RANK_P+1).EQ.IG)THEN 
-        IF(IG.NE.1)THEN
-          CALL MPI_RECV(NELEM_PP,1,MPI_INTEGER,0,100,& 
-     &         MPI_COMM_P,MPI_STATUS,MPI_IERR) 
-        ELSE
-          NELEM_PP = NELEM_PP_CP
-        ENDIF
+      IF(((MPI_RANK_P+1).EQ.IG).AND.(IG.NE.1))THEN 
+        CALL MPI_RECV(NELEM_PP,1,MPI_INTEGER,0,100,& 
+     &       MPI_COMM_P,MPI_STATUS,MPI_IERR) 
       ENDIF 
 !	    	             
       IF(MPI_RANK_P.EQ.0)THEN  
-      DO 105 IEG=1,NELEM_PP 
-! *** SCROLL THROUGH 1ST COLUMN OF ELGRP TO FIND THE ELEMENTS IN EACH GROUP 
-      DO 106 IE=1,NELEM 
-      GRPT=ELGRP(IE,1) 
-      FLAG=ELGRP(IE,2) 
-      IF((GRPT.EQ.IG).AND.(FLAG.EQ.0))THEN 
-        ELGRP(IE,2)=IEG 
-        GOTO 113 ! "EXIT" (the innermost loop, 106)
-      ENDIF 
- 106  CONTINUE 
- 113  CONTINUE 
- 105  CONTINUE   
+        DO 105 IEG=1,NELEM_PP_CP
+! ***     SCROLL THROUGH 1ST COLUMN OF ELGRP TO FIND THE ELEMENTS IN EACH GROUP 
+          DO 106 IE=1,NELEM 
+            GRPT=ELGRP(IE,1) 
+            FLAG=ELGRP(IE,2) 
+            IF((GRPT.EQ.IG).AND.(FLAG.EQ.0))THEN 
+              ELGRP(IE,2)=IEG 
+              GOTO 113 ! "EXIT" (the innermost loop, 106)
+            ENDIF 
+ 106      CONTINUE 
+ 113      CONTINUE 
+ 105    CONTINUE   
       ENDIF      !LINKS WITH IF STATMENT ON LINE 118 
 
       CALL MPI_BARRIER(MPI_COMM_P,MPI_IERR) 

@@ -216,10 +216,13 @@
         DEALLOCATE(COORD_PP_CP)
       ENDIF  ! IF(MPI_RANK_P.EQ.0)THEN !ccmfcjskha
 !
+      WRITE(*,*) "DIOCANE1"
       IF(MPI_RANK_P.NE.0)THEN ! ccmdxkaljfa
-        TAG=MPI_RANK_P*10
+        TAG=(MPI_RANK_P+1)*10
+        WRITE(*,*) "DIOCANE1.5"
         CALL MPI_SEND(IPCOM_PP,maxNPOIN_PP,MPI_INTEGER,&
      &              0,TAG,MPI_COMM_P,MPI_IERR)
+        WRITE(*,*) "DIOCANE1.75"
         TAG4=4
         SIZE4=2*NPOIN_PP
         CALL MPI_RECV(COORD_PP,SIZE4,MPI_REAL,0,& 
@@ -239,8 +242,10 @@
           CALL IFILLV(IBCOM_PP_CP,maxNBOUN_PP,CO)
           TAG=IG*10
           IF(IG.NE.1)THEN
+          WRITE(*,*) "DIOCANE1.5-2"
           CALL MPI_RECV(IPCOM_PP_CP,maxNPOIN_PP,MPI_INTEGER,IG-1,&
      &             TAG,MPI_COMM_P,MPI_STATUS,MPI_IERR)
+          WRITE(*,*) "DIOCANE1.75-2"
           ELSE
             IPCOM_PP_CP = IPCOM_PP
           ENDIF
@@ -318,6 +323,7 @@
         DEALLOCATE(RSIDO_PP_CP)
         DEALLOCATE(IBCOM_PP_CP)
       ENDIF    ! IF(MPI_RANK_P.EQ.0)THEN  ! diescaa
+      WRITE(*,*) "DIOCANE2"
 !
       IF(MPI_RANK_P.NE.0)THEN  !dsjkhadfxx
         TAG=MPI_RANK_P*10

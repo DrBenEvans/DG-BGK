@@ -68,6 +68,11 @@ INTEGER,ALLOCATABLE :: LCOM_PP_CP(:,:)
 - MPI_Recv called on the master when the max DTE was to be determined. Unnecessary.
 
 On 2 processes:
-- issued in GETLOC. Probably error in the way ELGRP(1,i) is set up (+-1 on rank)
+- issues in GETLOC. Probably error in the way ELGRP(1,i) is set up (+-1 on rank).
+  - ACTUALLY NO: the problem was that ELGRP was not initialized correctly. It was initialized
+  in PTMESH up to index NELEM_PP even for the part of the second partition while it must be 
+  initialized for NELEM_PP_CP element per partition (NELEM_PP is now only referred to the
+  rank 0 which is doing all the work in initialization.
+  - A deadloc caused by tag misalignment (tag = MPI_RANK_P*10 instead of (MPI_RANK_P+1)*10)
 
 
