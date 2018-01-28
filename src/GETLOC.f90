@@ -152,8 +152,8 @@
      &                MPI_COMM_P,MPI_IERR)
           ELSE
             NPOIN_PP = NPOIN_PP_CP
-            INTMA_PP = INTMA_PP_CP
-            IPCOM_PP = IPCOM_PP_CP
+            INTMA_PP(:,1:NELEM_PP) = INTMA_PP_CP(:,1:NELEM_PP)
+            IPCOM_PP(1:NPOIN_PP_CP)   = IPCOM_PP_CP(1:NPOIN_PP_CP)  
           ENDIF
 10001   CONTINUE
         DEALLOCATE(INTMA_PP_CP)
@@ -189,7 +189,7 @@
           CALL MPI_RECV(IPCOM_PP_CP,maxNPOIN_PP,MPI_INTEGER,IG-1,&
      &               TAG,MPI_COMM_P,MPI_STATUS,MPI_IERR)
           ELSE
-            IPCOM_PP_CP = IPCOM_PP
+            IPCOM_PP_CP(1:maxNPOIN_PP) = IPCOM_PP(1:maxNPOIN_PP)
           ENDIF
           CALL RFILLM(COORD_PP_CP,2,maxNPOIN_PP,COO)
 !
@@ -216,13 +216,10 @@
         DEALLOCATE(COORD_PP_CP)
       ENDIF  ! IF(MPI_RANK_P.EQ.0)THEN !ccmfcjskha
 !
-      WRITE(*,*) "DIOCANE1"
       IF(MPI_RANK_P.NE.0)THEN ! ccmdxkaljfa
         TAG=(MPI_RANK_P+1)*10
-        WRITE(*,*) "DIOCANE1.5"
         CALL MPI_SEND(IPCOM_PP,maxNPOIN_PP,MPI_INTEGER,&
      &              0,TAG,MPI_COMM_P,MPI_IERR)
-        WRITE(*,*) "DIOCANE1.75"
         TAG4=4
         SIZE4=2*NPOIN_PP
         CALL MPI_RECV(COORD_PP,SIZE4,MPI_REAL,0,& 
@@ -242,12 +239,10 @@
           CALL IFILLV(IBCOM_PP_CP,maxNBOUN_PP,CO)
           TAG=IG*10
           IF(IG.NE.1)THEN
-          WRITE(*,*) "DIOCANE1.5-2"
-          CALL MPI_RECV(IPCOM_PP_CP,maxNPOIN_PP,MPI_INTEGER,IG-1,&
-     &             TAG,MPI_COMM_P,MPI_STATUS,MPI_IERR)
-          WRITE(*,*) "DIOCANE1.75-2"
+            CALL MPI_RECV(IPCOM_PP_CP,maxNPOIN_PP,MPI_INTEGER,IG-1,&
+     &               TAG,MPI_COMM_P,MPI_STATUS,MPI_IERR)
           ELSE
-            IPCOM_PP_CP = IPCOM_PP
+            IPCOM_PP_CP(1:maxNPOIN_PP) = IPCOM_PP(1:maxNPOIN_PP)
           ENDIF
 !
 ! *** L  OOP OVER ALL THE BOUNDARY SIDES
@@ -263,7 +258,7 @@
               ENDIF
               NPOIN_PP_CP=NPGRP(IG)
               DO I=1,NPOIN_PP_CP ! scan for BSIDO(1,IB) om IPCOM_PP
-                IPT=IPCOM_PP(I)
+                IPT=IPCOM_PP_CP(I)
                 IP=BSIDO(1,IB)
                 IF(IP.EQ.IPT)THEN ! found 
                   BSIDO_PP_CP(1,FLAG)=I
@@ -272,7 +267,7 @@
               ENDDO
  1030         CONTINUE
               DO I=1,NPOIN_PP_CP  ! scan for BSIDO(1,IB) om IPCOM_PP
-                IPT=IPCOM_PP(I)
+                IPT=IPCOM_PP_CP(I)
                 IP=BSIDO(2,IB)
                 IF(IP.EQ.IPT)THEN ! found
                   BSIDO_PP_CP(2,FLAG)=I
@@ -314,19 +309,18 @@
      &             TAG8,MPI_COMM_P,MPI_IERR)
           ELSE 
             NBOUN_PP = NBOUN_PP_CP
-            BSIDO_PP = BSIDO_PP_CP
-            RSIDO_PP = RSIDO_PP_CP
-            IBCOM_PP = IBCOM_PP_CP
+            BSIDO_PP(:,1:NBOUN_PP_CP) = BSIDO_PP_CP(:,1:NBOUN_PP_CP)
+            RSIDO_PP(:,1:NBOUN_PP_CP) = RSIDO_PP_CP(:,1:NBOUN_PP_CP)
+            IBCOM_PP(1:NBOUN_PP_CP) = IBCOM_PP_CP(1:NBOUN_PP_CP)
           ENDIF
 10005   CONTINUE
         DEALLOCATE(BSIDO_PP_CP)
         DEALLOCATE(RSIDO_PP_CP)
         DEALLOCATE(IBCOM_PP_CP)
       ENDIF    ! IF(MPI_RANK_P.EQ.0)THEN  ! diescaa
-      WRITE(*,*) "DIOCANE2"
 !
       IF(MPI_RANK_P.NE.0)THEN  !dsjkhadfxx
-        TAG=MPI_RANK_P*10
+        TAG=(MPI_RANK_P+1)*10
         CALL MPI_SEND(IPCOM_PP,maxNPOIN_PP,MPI_INTEGER,&
      &    0,TAG,MPI_COMM_P,MPI_IERR)
         TAG5=5
@@ -402,18 +396,19 @@
      &          TAG10,MPI_COMM_P,MPI_IERR)
             ENDIF
           ELSE
-            GEOME_PP = GEOME_PP_CP
-            DEALLOCATE(GEOME_PP_CP)
+            GEOME_PP(:,1:maxNELEM_PP) = GEOME_PP_CP(:,1:maxNELEM_PP)
 
             IF(IMMAT.EQ.1)THEN
-              MMAT_PP = MMAT_PP_CP
+              MMAT_PP(:,1:maxNELEM_PP) = MMAT_PP_CP(:,1:maxNELEM_PP)
             ELSE
-              CMMAT_PP = CMMAT_PP_CP
+              CMMAT_PP(:,:,1:maxNELEM_PP) =&
+     &               CMMAT_PP_CP(:,:,1:maxNELEM_PP)
             ENDIF
-            DEALLOCATE(MMAT_PP_CP)
-            DEALLOCATE(CMMAT_PP_CP)
           ENDIF
 10007   CONTINUE
+        DEALLOCATE(GEOME_PP_CP)
+        DEALLOCATE(MMAT_PP_CP)
+        DEALLOCATE(CMMAT_PP_CP)
       ENDIF       ! IF(MPI_RANK_P.EQ.0)THEN ! jdhdcaaaaaa
 !
       IF(MPI_RANK_P.NE.0)THEN !cncsskdjhfsdf
@@ -456,10 +451,10 @@
           CALL IFILLV(LCOMM_PP_CP,maxNSIDE_PP,CO)
           TAG=IG*10
           IF(IG.NE.1)THEN
-          CALL MPI_RECV(IPCOM_PP,maxNPOIN_PP,MPI_INTEGER,IG-1,&
+          CALL MPI_RECV(IPCOM_PP_CP,maxNPOIN_PP,MPI_INTEGER,IG-1,&
      &           TAG,MPI_COMM_P,MPI_STATUS,MPI_IERR)
           ELSE
-            IPCOM_PP = IPCOM_PP_CP
+            IPCOM_PP_CP(1:maxNPOIN_PP) = IPCOM_PP(1:maxNPOIN_PP)
           ENDIF
 !
 ! ***     LOOP OVER THE ELEMENT EDGES
@@ -490,7 +485,7 @@
               ISCOM_PP_CP(FLAG)=IS    !FILL IN ISCOM_PP_CP
               IP1=ISIDE(1,IS)
               DO 1010 I=1,maxNPOIN_PP
-                IPT=IPCOM_PP(I)
+                IPT=IPCOM_PP_CP(I)
                 IF(IPT.EQ.IP1)THEN
                   ISIDE_PP_CP(1,FLAG)=I    !FILL IN ISIDE_PP_CP(1,*)
                   GOTO 1011
@@ -499,7 +494,7 @@
  1011         CONTINUE
               IP2=ISIDE(2,IS)
               DO 1012 I=1,maxNPOIN_PP
-                IPT=IPCOM_PP(I)
+                IPT=IPCOM_PP_CP(I)
                 IF(IPT.EQ.IP2)THEN
                   ISIDE_PP_CP(2,FLAG)=I     !FILL IN ISIDE_PP_CP(2,*)
                   GOTO 1013
@@ -529,7 +524,7 @@
               LCOMM_PP_CP(FLAG)=RANKR
               IP1=ISIDE(1,IS)     !RHS ELEMENT IN OTHER PROCESSOR DOMAIN
               DO 1014 I=1,maxNPOIN_PP
-                IPT=IPCOM_PP(I)
+                IPT=IPCOM_PP_CP(I)
                 IF(IPT.EQ.IP1)THEN
                   ISIDE_PP_CP(1,FLAG)=I     !FILL IN ISIDE_PP_CP(1,*)
                   GOTO 1015
@@ -538,7 +533,7 @@
  1015         CONTINUE
               IP2=ISIDE(2,IS)
               DO 1016 I=1,maxNPOIN_PP
-                IPT=IPCOM_PP(I)
+                IPT=IPCOM_PP_CP(I)
                 IF(IPT.EQ.IP2)THEN
                   ISIDE_PP_CP(2,FLAG)=I      !FILL IN ISIDE_PP_CP(2,*)
                   GOTO 1017
@@ -571,7 +566,7 @@
               LCOMM_PP_CP(FLAG)=RANKL
               IP1=ISIDE(1,IS)    !LHS ELEMENT IN OTHER PROCESSOR DOMAIN
               DO 1018 I=1,maxNPOIN_PP
-                IPT=IPCOM_PP(I)
+                IPT=IPCOM_PP_CP(I)
                 IF(IPT.EQ.IP1)THEN
                   ISIDE_PP_CP(1,FLAG)=I    !FILL IN ISIDE_PP_CP(1,*)
                   GOTO 1019
@@ -580,7 +575,7 @@
  1019         CONTINUE
               IP2=ISIDE(2,IS)
               DO 1020 I=1,maxNPOIN_PP
-                IPT=IPCOM_PP(I)
+                IPT=IPCOM_PP_CP(I)
                 IF(IPT.EQ.IP2)THEN
                   ISIDE_PP_CP(2,FLAG)=I    !FILL IN ISIDE_PP_CP(2,*)
                   GOTO 1021
@@ -611,7 +606,7 @@
               ISCOM_PP_CP(FLAG)=IS
               IP1=ISIDE(1,IS)   !RHS ELEMENT OUTSIDE DOMAIN
               DO 1022 I=1,maxNPOIN_PP
-                IPT=IPCOM_PP(I)
+                IPT=IPCOM_PP_CP(I)
                 IF(IPT.EQ.IP1)THEN
                   ISIDE_PP_CP(1,FLAG)=I    !FILL IN ISIDE_PP_CP(1,*)
                   GOTO 1023
@@ -620,7 +615,7 @@
  1023         CONTINUE
               IP2=ISIDE(2,IS)
               DO 1024 I=1,maxNPOIN_PP
-                IPT=IPCOM_PP(I)
+                IPT=IPCOM_PP_CP(I)
                 IF(IPT.EQ.IP2)THEN
                   ISIDE_PP_CP(2,FLAG)=I      !FILL IN ISIDE_PP_CP(2,*)
                   GOTO 1025
@@ -651,7 +646,7 @@
               ISCOM_PP_CP(FLAG)=IS
               IP1=ISIDE(1,IS)    !LHS ELEMENT OUTSIDE DOMAIN
               DO 1026 I=1,maxNPOIN_PP
-                IPT=IPCOM_PP(I)
+                IPT=IPCOM_PP_CP(I)
                 IF(IPT.EQ.IP1)THEN
                   ISIDE_PP_CP(1,FLAG)=I   !FILL IN ISIDE_PP_CP(1,*)
                   GOTO 1027
@@ -660,7 +655,7 @@
  1027         CONTINUE
               IP2=ISIDE(2,IS)
               DO 1028 I=1,maxNPOIN_PP
-                IPT=IPCOM_PP(I)
+                IPT=IPCOM_PP_CP(I)
                 IF(IPT.EQ.IP2)THEN
                   ISIDE_PP_CP(2,FLAG)=I    !FILL IN ISIDE_PP_CP(2,*)
                   GOTO 1029
@@ -723,26 +718,26 @@
      &           TAG18,MPI_COMM_P,MPI_IERR)
           ELSE
             NSIDE_PP = NSIDE_PP_CP
-            NX_PP    = NX_PP_CP   
-            DEALLOCATE(NX_PP_CP)
-            NY_PP    = NY_PP_CP
-            DEALLOCATE(NY_PP_CP)
-            EL_PP    = EL_PP_CP 
-            DEALLOCATE(EL_PP_CP)
-            ISIDE_PP = ISIDE_PP_CP
-            DEALLOCATE(ISIDE_PP_CP)
-            ISCOM_PP = ISCOM_PP_CP
-            DEALLOCATE(ISCOM_PP_CP)
-            LCOMM_PP = LCOMM_PP_CP
-            DEALLOCATE(LCOMM_PP_CP)
+            NX_PP(1:NSIDE_PP_CP) = NX_PP_CP(1:NSIDE_PP_CP)
+            NY_PP(1:NSIDE_PP_CP) = NY_PP_CP(1:NSIDE_PP_CP)
+            EL_PP(1:NSIDE_PP_CP) = EL_PP_CP(1:NSIDE_PP_CP)
+            ISIDE_PP(:,1:NSIDE_PP_CP) = ISIDE_PP_CP(:,1:NSIDE_PP_CP)
+            ISCOM_PP(1:NSIDE_PP_CP) = ISCOM_PP_CP(1:NSIDE_PP_CP)
+            LCOMM_PP(1:NSIDE_PP_CP) = LCOMM_PP_CP(1:NSIDE_PP_CP)
             NCOMM_PP = NCOMM_PP_CP
           ENDIF
 
 10009   CONTINUE
+        DEALLOCATE(NX_PP_CP)
+        DEALLOCATE(NY_PP_CP)
+        DEALLOCATE(EL_PP_CP)
+        DEALLOCATE(ISIDE_PP_CP)
+        DEALLOCATE(ISCOM_PP_CP)
+        DEALLOCATE(LCOMM_PP_CP)
       ENDIF   !IF(MPI_RANK_P.EQ.0)THEN !xvmnsdnmbfa
 
       IF(MPI_RANK_P.NE.0)THEN !ddpddpddpd
-        TAG=MPI_RANK_P*10
+        TAG=(MPI_RANK_P+1)*10
         CALL MPI_SEND(IPCOM_PP,maxNPOIN_PP,MPI_INTEGER,&
      &    0,TAG,MPI_COMM_P,MPI_IERR)
         TAG11=11

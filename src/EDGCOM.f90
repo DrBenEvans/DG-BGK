@@ -46,7 +46,7 @@
           IF((IEL.EQ.-1).OR.(IER.EQ.-1))THEN
             CALL MPI_BCAST(OPPPART,1,MPI_INTEGER,IG-1,MPI_COMM_P,MPI_IERR)
             CALL MPI_BCAST(GLOBIS,1,MPI_INTEGER,IG-1,MPI_COMM_P,MPI_IERR)
-            IF(MPI_RANK_P.EQ.OPPPART)THEN
+            IF((MPI_RANK_P+1).EQ.OPPPART)THEN
               DO IST=1,NSIDE_PP   ! search ISCOM_PP for 
                                   ! global edge
                 ISTEST=ISCOM_PP(IST)

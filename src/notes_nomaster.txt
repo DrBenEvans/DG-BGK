@@ -73,6 +73,28 @@ On 2 processes:
   in PTMESH up to index NELEM_PP even for the part of the second partition while it must be 
   initialized for NELEM_PP_CP element per partition (NELEM_PP is now only referred to the
   rank 0 which is doing all the work in initialization.
-  - A deadloc caused by tag misalignment (tag = MPI_RANK_P*10 instead of (MPI_RANK_P+1)*10)
+  - Deadlocks caused by tag misalignment (tag = MPI_RANK_P*10 instead of (MPI_RANK_P+1)*10)
+    This issue was present in some places. Also, I got confused between sends - IPCOM_PP is
+    sent many times from slaves to master, and a deadlock was present because I didn't
+    understand the correct match between sends from the ranks and receives on the master.
+  - *_PP_CP arrays deallocated after first iteration of the cycles, but needed also on the
+    other iterations.
+    the right 
+  - IPCOM_PP was used on the master in several places where IPCOM_PP_CP would have been the 
+    right choice.
+  - copying arrays must be done specifying the portion, otherwise also the borders of the 
+    array will be modified. (*this must actually be checked if it's a problem or not)
+
+
+
+- issues in GETMAC:
+  - NPOIN_PP was used instead of NPOIN_PP_CP.
+  - An IF statement was missing - sends must not be performed if on the master rank/partition 1
+  - a MPI_RANK_P.EQ.IG instead of (MPI_RANK_P+1).EG.IG was present
+  - copying arrays must be done specifying the portion, otherwise also the borders of the 
+    array will be modified. (*this must actually be checked if it's a problem or not)
+
+- issues in FLUCON2
+  - It seems that an edge is not found. The problem actually lied in the assignments in GETLOC.
 
 

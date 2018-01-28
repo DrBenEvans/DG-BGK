@@ -26,10 +26,10 @@
 ! *** INITIALISE MACRO VECTORS 
 ! 	
       IF(MPI_RANK_P.EQ.0)THEN 
+        ALLOCATE(IPCOM_PP_CP(maxNPOIN_PP))
         ALLOCATE(ND_PP_CP(maxNPOIN_PP),RHO_PP_CP(maxNPOIN_PP))
         ALLOCATE(UVEL_PP_CP(maxNPOIN_PP),VVEL_PP_CP(maxNPOIN_PP))
         ALLOCATE(PS_PP_CP(maxNPOIN_PP),TEMP_PP_CP(maxNPOIN_PP))
-        ALLOCATE(IPCOM_PP_CP(maxNPOIN_PP))
 
         CALL RFILLV(ND,NPOIN,0.0) 
         CALL RFILLV(RHO,NPOIN,0.0) 
@@ -41,53 +41,60 @@
       ENDIF!LINKS WITH IF STATEMENT ON LINE 20 
 !	 
       DO 1000 IG=1,NGRPS
-        IF(MPI_RANK_P.EQ.IG)THEN 
-          CALL MPI_SEND(NPOIN_PP,1,MPI_INTEGER,0,1,MPI_COMM_P,MPI_IERR) 
-          CALL MPI_SEND(IPCOM_PP,NPOIN_PP,MPI_INTEGER,0,2,MPI_COMM_P,& 
-     &               MPI_IERR) 
-          CALL MPI_SEND(ND_PP,NPOIN_PP,MPI_REAL,0,3,MPI_COMM_P,& 
-     &          MPI_IERR) 
-          CALL MPI_SEND(RHO_PP,NPOIN_PP,MPI_REAL,0,4,MPI_COMM_P,& 
+        IF((MPI_RANK_P+1).EQ.IG)THEN 
+      
+          IF(IG.NE.1)THEN 
+            CALL MPI_SEND(NPOIN_PP,1,MPI_INTEGER,0,1,MPI_COMM_P,&
      &                 MPI_IERR) 
-          CALL MPI_SEND(UVEL_PP,NPOIN_PP,MPI_REAL,0,5,MPI_COMM_P,& 
+            CALL MPI_SEND(IPCOM_PP,NPOIN_PP,MPI_INTEGER,0,2,MPI_COMM_P,& 
      &                 MPI_IERR) 
-          CALL MPI_SEND(VVEL_PP,NPOIN_PP,MPI_REAL,0,6,MPI_COMM_P,& 
+            CALL MPI_SEND(ND_PP,NPOIN_PP,MPI_REAL,0,3,MPI_COMM_P,& 
+     &            MPI_IERR) 
+            CALL MPI_SEND(RHO_PP,NPOIN_PP,MPI_REAL,0,4,MPI_COMM_P,& 
+     &                   MPI_IERR) 
+            CALL MPI_SEND(UVEL_PP,NPOIN_PP,MPI_REAL,0,5,MPI_COMM_P,& 
+     &                   MPI_IERR) 
+            CALL MPI_SEND(VVEL_PP,NPOIN_PP,MPI_REAL,0,6,MPI_COMM_P,& 
+     &                   MPI_IERR) 
+            CALL MPI_SEND(PS_PP,NPOIN_PP,MPI_REAL,0,7,MPI_COMM_P,& 
+     &                   MPI_IERR) 
+            CALL MPI_SEND(TEMP_PP,NPOIN_PP,MPI_REAL,0,8,MPI_COMM_P,& 
      &                 MPI_IERR) 
-          CALL MPI_SEND(PS_PP,NPOIN_PP,MPI_REAL,0,7,MPI_COMM_P,& 
-     &                 MPI_IERR) 
-          CALL MPI_SEND(TEMP_PP,NPOIN_PP,MPI_REAL,0,8,MPI_COMM_P,& 
-     &               MPI_IERR) 
+          ENDIF    
+
         ENDIF 
 ! 
         IF(MPI_RANK_P.EQ.0)THEN 
           IF(IG.NE.1)THEN 
             CALL MPI_RECV(NPOIN_PP_CP,1,MPI_INTEGER,IG-1,1,MPI_COMM_P,& 
      &           MPI_STATUS,MPI_IERR) 
-            CALL MPI_RECV(IPCOM_PP_CP,NPOIN_PP,MPI_INTEGER,IG-1,2,& 
+            CALL MPI_RECV(IPCOM_PP_CP,NPOIN_PP_CP,MPI_INTEGER,IG-1,2,& 
      &            MPI_COMM_P, MPI_STATUS, MPI_IERR) 
-            CALL MPI_RECV(ND_PP_CP,NPOIN_PP,MPI_REAL,IG-1,3,& 
+            CALL MPI_RECV(ND_PP_CP,NPOIN_PP_CP,MPI_REAL,IG-1,3,& 
      &            MPI_COMM_P, MPI_STATUS, MPI_IERR) 
-            CALL MPI_RECV(RHO_PP_CP,NPOIN_PP,MPI_REAL,IG-1,4,& 
+            CALL MPI_RECV(RHO_PP_CP,NPOIN_PP_CP,MPI_REAL,IG-1,4,& 
      &            MPI_COMM_P, MPI_STATUS, MPI_IERR) 
-            CALL MPI_RECV(UVEL_PP_CP,NPOIN_PP,MPI_REAL,IG-1,5,& 
+            CALL MPI_RECV(UVEL_PP_CP,NPOIN_PP_CP,MPI_REAL,IG-1,5,& 
      &            MPI_COMM_P, MPI_STATUS, MPI_IERR) 
-            CALL MPI_RECV(VVEL_PP_CP,NPOIN_PP,MPI_REAL,IG-1,6,& 
+            CALL MPI_RECV(VVEL_PP_CP,NPOIN_PP_CP,MPI_REAL,IG-1,6,& 
      &            MPI_COMM_P, MPI_STATUS, MPI_IERR) 
-            CALL MPI_RECV(PS_PP_CP,NPOIN_PP,MPI_REAL,IG-1,7,& 
+            CALL MPI_RECV(PS_PP_CP,NPOIN_PP_CP,MPI_REAL,IG-1,7,& 
      &            MPI_COMM_P, MPI_STATUS, MPI_IERR) 
-            CALL MPI_RECV(TEMP_PP_CP,NPOIN_PP,MPI_REAL,IG-1,8,& 
+            CALL MPI_RECV(TEMP_PP_CP,NPOIN_PP_CP,MPI_REAL,IG-1,8,& 
      &           MPI_COMM_P, MPI_STATUS, MPI_IERR) 
           ELSE      
             NPOIN_PP_CP = NPOIN_PP
-            IPCOM_PP_CP = IPCOM_PP
-            ND_PP_CP    = ND_PP   
-            RHO_PP_CP   = RHO_PP  
-            UVEL_PP_CP  = UVEL_PP 
-            VVEL_PP_CP  = VVEL_PP 
-            PS_PP_CP    = PS_PP   
-            TEMP_PP_CP  = TEMP_PP 
-          ENDIF    
-! 
+            IPCOM_PP_CP(1:NPOIN_PP_CP) = IPCOM_PP(1:NPOIN_PP_CP)
+            ND_PP_CP(1:NPOIN_PP_CP)    = ND_PP(1:NPOIN_PP_CP)   
+            RHO_PP_CP(1:NPOIN_PP_CP)   = RHO_PP(1:NPOIN_PP_CP)  
+            UVEL_PP_CP(1:NPOIN_PP_CP)  = UVEL_PP(1:NPOIN_PP_CP) 
+            VVEL_PP_CP(1:NPOIN_PP_CP)  = VVEL_PP(1:NPOIN_PP_CP) 
+            PS_PP_CP(1:NPOIN_PP_CP)    = PS_PP(1:NPOIN_PP_CP)   
+            TEMP_PP_CP(1:NPOIN_PP_CP)  = TEMP_PP(1:NPOIN_PP_CP) 
+          ENDIF
+
+          
+
           DO 1010 IP_PP=1,NPOIN_PP_CP
             IP=IPCOM_PP_CP(IP_PP)
             ND(IP)=ND(IP)+ND_PP_CP(IP_PP)
