@@ -29,6 +29,18 @@ plt.ylabel("speedup")
 plt.legend()
 
 
+plt.figure()
+for arr,c in t_per_p:
+    nranks = arr[:,0] * c
+    time_needed = arr[:,1]
+    plt.plot(1.0/nranks,time_needed,label = "Pp="+str(c), linestyle = "None", marker = '+')
+      
+plt.xlabel("inverse of no of working ranks")
+plt.ylabel("time")
+plt.legend()
+
+
+
 # grouping per v-space partitions
 plt.figure()
 t_per_v= [ (times[times[:,1]==c ][:,[0,3]],c) for c in set(times[:,1])]
@@ -48,6 +60,16 @@ for arr,c in t_per_v:
 
 plt.xlabel("no of working ranks")
 plt.ylabel("speedup")
+plt.legend()
+
+plt.figure()
+for arr,c in t_per_v:
+    nranks = arr[:,0] * c
+    time_needed = arr[:,1]
+    plt.plot(1.0/nranks,time_needed,label = "Pv="+str(c), linestyle = "None", marker = '+')
+
+plt.xlabel("inverse of no of working ranks")
+plt.ylabel("time")
 plt.legend()
 
 
