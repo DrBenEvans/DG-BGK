@@ -86,8 +86,6 @@ def plot_stuff(nxy_df,ndata_df,col):
     plt.colorbar()
  
    
-
-
 if __name__ == "__main__":
     try: 
         dirname = argv[1]
