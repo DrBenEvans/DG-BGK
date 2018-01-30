@@ -41,7 +41,7 @@
           CHARACTER :: GIDMeshFile*80
         END TYPE
 ! 
-	  INTEGER VNPNT,NPOIN,NELEM,NNODE,IP,IN,NRANK,NELEM_PP 
+	  INTEGER VNPNT,NPOIN,NELEM,NNODE,IP,IN,NPART,NELEM_PP 
       INTEGER maxNELEM_PP  
       INTEGER IPT,J,IE,MPI_IERR,MPI_STATUS(MPI_STATUS_SIZE) 
       INTEGER IE_PP,TAG 
@@ -90,7 +90,7 @@
       ENDIF
       DO IG=1,MPI_SIZE_P !
         TSIZE = NEGRP(IG)*3*VNPNT_PART
-        IF(MPI_RANK_P.EQ.IG)THEN
+        IF((MPI_RANK_P+1).EQ.IG)THEN
           CALL MPI_SEND(DISNF_PP(:,VSPACE_FIRST:VSPACE_LAST,:),&
      &            TSIZE,MPI_REAL,0,IG,&
      &            MPI_COMM_P,MPI_IERR)
@@ -98,15 +98,15 @@
         IF(MPI_RANK_P.EQ.0)THEN
           IF(IG.NE.1) THEN
             CALL MPI_RECV(DISNF_PP(:,VSPACE_FIRST:VSPACE_LAST,:),&
-     &              TSIZE,MPI_REAL,IG,IG-1,&
+     &              TSIZE,MPI_REAL,IG-1,IG,&
      &              MPI_COMM_P,MPI_STATUS,MPI_IERR)
           ENDIF
           ! Copying DISNF_PP into DISNF    
           DO IE=1,NELEM ! scanning through DISNF
             ! Checking if we have received the necessary data 
             ! in this iteration of the DO IG,MPI_SIZE_P group
-            NRANK = ELGRP(IE,1) 
-            IF(NRANK.EQ.IG)THEN
+            NPART = ELGRP(IE,1) 
+            IF(NPART.EQ.IG)THEN
               IE_PP=ELGRP(IE,2)
               DISNF(:,:,IE) = DISNF_PP(:,:,IE_PP)
             ENDIF
