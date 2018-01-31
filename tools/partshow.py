@@ -3,6 +3,7 @@
 A simple tool to show the spatial configuration of partitions.
 Looks into directories and looks for the first file that matches the pattern
 'reentry.con.npart.*', and for reentry.plt.
+See visualize.py. 
 '''
 
 import visualize as vs

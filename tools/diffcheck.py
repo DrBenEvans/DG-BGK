@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+'''
+   Simple tool to compare numerical differences between ascii files.
+'''
+
 
 from sys import argv, exit
 from math import fabs

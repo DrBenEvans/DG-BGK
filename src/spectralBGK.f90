@@ -312,7 +312,6 @@
         IF(MPI_RANK.EQ.0) WRITE(15,5)NELEM,NPOIN,NBOUN  
 ! *** SET VALUE OF MXSID 
         mxsid=2*(NELEM+NBOUN) ! (3*NELEM+NBOUN)/2 IS ENOUGH,
-                              ! YOU MUPPET
 ! 
 ! *** WRITE V-SPACE INFO TO OUTPUT FILE 
 !       
