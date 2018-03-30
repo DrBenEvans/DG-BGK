@@ -60,15 +60,7 @@
 ! 
 ! *** INITIALISE DISNF_PP 
 ! 
-      IF(MPI_RANK_P.NE.0)THEN 
-       DO IE_PP=1,NNODE
-          DO IV=VSPACE_FIRST,VSPACE_LAST
-            DO IN=1,NNODE
-              DISNF_PP(IN,IV,IE_PP) = 0.0
-            ENDDO
-          ENDDO
-        ENDDO
-      ENDIF
+      DISNF_PP = 0.0
 ! 
 ! *** ASK THE USER IF THEY ARE USING A RESTART FILE AS INITIAL CONDITIONS 
 ! 
