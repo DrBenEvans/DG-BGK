@@ -1,4 +1,3 @@
-
 # MPI IMPLEMENTATION NOTES
 
 In the original implementation, no MPI was used. A domain decomposition with
@@ -49,9 +48,9 @@ end for on all processes
 ```
 
 This is computationally inefficient, since for each step of the time marching 
-scheme millions of MPI_BCAST calls are performed.
-
-
+scheme millions of MPI_BCAST calls are performed. 
+This scheme has been modified only where it would severely decrease performance
+(i.e., during the time steps and in the [OUTPUT](../src/OUTPUT.f90) subroutine).
 
 ## VELOCITY SPACE PARTITIONING.
 
@@ -62,8 +61,9 @@ visualise it separately).
 
 Some remarks:
 * Velocity space has been partitioned replicating the master-slave layout in
-  the original code *(Performance problems coming from this 
-can be easily fixed.)*
+  the original code. In order to remove the performance penalty associated to 
+  the lazy master process, a share of the work of the slaves has been assigned
+  to the master.
 
 List of relevant variables:
 * **VSPACE_FIRST**: First index of vspace that is in the responsibility of the
@@ -75,6 +75,9 @@ List of relevant variables:
 just the minimum possible which would be VSPACE_FIRS:VSPACE_LAST (it does not 
 contain a big amount of data, by the way).
 
+As stated in [README](./README.md), there are some constraints on the choice of 
+the number of partitions in velocity space (see discussion around MPI_SIZE_V).
+
 ### OUTPUT 
 
 The **OUTPUT** subroutine prints to file the content of the DISNF array, which
@@ -83,7 +86,7 @@ velocity space. In this subroutine, a communication pattern described in the
 [previous section](#some-comments-on-the-old-mpi-implementation) was used.
 In the new implementation, the subroutine consists of the following steps:
 * All the "master" ranks (having MPI_RANK_P equal to 0) collect and reorder the
-  data pertaining to their velocity space partition from the other ranks in the
+  data pertaining to their velocity space partition from the ranks in the
 same MPI_COMM_P communicator:
     *  Each rank sends to the master in its MPI_COMM_P its whole DISNF_PP
        array (which has size 3x[VSPACE_FIRST:VSPACE_LAST]xNELEM_PP).
@@ -98,5 +101,5 @@ communicator and writes the content to a file.
 ### NOTES
 
 * The **INICON** and **INICON2** subroutines have been modified for VSPACE
-  partitioning, but the highly inefficient communication pattern was kept in
+  partitioning, but the inefficient communication pattern was kept in
 place, since this is not a performance-critical part of the program.

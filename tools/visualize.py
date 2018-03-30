@@ -1,4 +1,7 @@
 #!/usr/bin/python3
+''' 
+   Small library to visualize partitions and physical results.
+'''
 from sys import argv
 from os import path
 import numpy as np
@@ -10,6 +13,9 @@ from matplotlib import pyplot as plt
 
 # MESH INFO
 def geom_info(dirname):
+    '''
+    directory name as input, must contain mesh file and metis partition file
+    '''
     f = open(path.join(dirname,'reentry.plt'))
     
     nxy_data= f.readlines()
@@ -86,8 +92,6 @@ def plot_stuff(nxy_df,ndata_df,col):
     plt.colorbar()
  
    
-
-
 if __name__ == "__main__":
     try: 
         dirname = argv[1]
@@ -109,12 +113,6 @@ if __name__ == "__main__":
     
     x = all_data[0][['x']].values.flatten()
     y = all_data[0][['y']].values.flatten()
-    #nds = [ data[['ND']].values for data in all_data ]
-    #Us = [ data[['U']].values for data in all_data ]
-    #Vs = [ data[['V']].values for data in all_data ]
-    #RHOs = [ data[['RHO']].values for data in all_data ]
-    #PSs = [ data[['PS']].values for data in all_data ]
-    TEMPs = [ data[['TEMP']].values for data in all_data ]
     
     xi = np.linspace(x.min(),x.max(),800)
     yi = np.linspace(y.min(),y.max(),800)

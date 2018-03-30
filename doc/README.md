@@ -17,7 +17,7 @@ verification.
 # Random notes, but important
 
 *  The program requires intel fortran to be compiled and work with the input 
-data provided (see file [reentry_4.con](../doc/reentry_4.con)). As an example, 
+data provided (see file [example.con](../doc/example.con)). As an example, 
 gfortran would need quotes around strings in the configuration file. This does 
 not exclude that the program can be compiled successfully with gnu tools and 
 execute correctly - I just cannot guarantee that (also due to my ignorance). 
@@ -56,7 +56,7 @@ In what follows, a 2D mesh is assumed.
     1. Point index
     2. Second point index
     3. Element index
-    4. Type of edge (1 inflow, 4 object surface, 2 (?) )
+    4. Type of edge (1 inflow, 4 object surface, 2 (?) ).
     5. (?)
     6. (?)
 
@@ -93,6 +93,8 @@ the whole domain.
 *except on the boundaries*, where the two points are flipped so that only
 ISIDE(4) can be zero.
     * When ISIDE(4) is zero, then also ISIDE(7) and ISIDE(8) are.
+    * MXSID is set to 2*(NELEM+NBOUN), but I think it can be proven that 
+      (3*NELEM+NBOUN)/2 is enough. Anyway, oversizing ISIDE is not a problem.
 
 * **NX(NSIDE)**: Contains the *x* components of the normal to each edge in the
   mesh. The normals are taken 90 degrees clockwise with respect to the 
@@ -102,15 +104,21 @@ direction of the edge.
 direction of the edge.
 
 
+### Macroscopic quantities
+* **RHO(NPOIN)**: Density for each point.
+* **UVEL(NPOIN)**: Average x-velocity for each point.
+* **VVEL(NPOIN)**: Average y-velocity for each point.
+* **PS(NPOIN)**: Pressure for each point (as the average of the pressure tensor).
+* **TEMP(NPOIN)**: Temperature for each point.
+
+Notice that these quantities are somehow averaged between the various copies of
+the nodes belonging to each element the node is part of (because it's 
+Discontinuous Galerkin, right?)
+
 ### Not fully understood stuff
 
 * **IELSI(2,NELEM)**: (?) Integer values.
 * **COORD(2,NPOINT)**: Coordinates of the nodes.
-* **RHO(NPOIN)**: (?)
-* **UVEL(NPOIN)**: (?)
-* **VVEL(NPOIN)**: (?)
-* **PS(NPOIN)**: (?)
-* **TEMP(NPOIN)**: (?)
 * **GEOME(7,NELEM)**: (?) Real values. Something related to the normals for the 
 3 edges of the element, multiplied by l/2A 
 * **MMAT(3,NELEM)**: Either this or CMAT is used. Related with GEOME(7,...)
@@ -144,12 +152,22 @@ About MPI-related stuff (see also [mpi_structure.md](mpi_structure.md)):
 * **MPI_RANK_P**: rank number for the current process associated to the 
 MPI_COMM_P communicator.
 * **MPI_SIZE_P**: Number of ranks in each P-space-spanning communicator.
+ It's equal to the number of partitions in position space.
 
 * **MPI_COMM_V**: MPI communicator which is common to all the processes sharing
   the same portion of position space (V_space-spanning communicator).
 * **MPI_RANK_V**: rank number for the current process associated to the 
 MPI_COMM_V communicator.
-* **MPI_SIZE_V**: Number of ranks in each V-space-spanning communicator.
+* **MPI_SIZE_V**: Number of ranks in each V-space-spanning communicator. 
+**NOTE:** Because of reflections of particles on the object surface, at each 
+step of the algorithm some particles bounce across velocity space. Fortunately, 
+energy wrt the object surface is conserved, which allows us to claim that the 
+modulus of speed does not change in the collision. This allows us not to 
+modify the [GETBOU](../src/GETBOU.f90) subroutine, as long as the portion of the velocity
+space with fixed **|v|** is not split across ranks. This is guaranteed only if 
+MPI_SIZE_V is a divisor of **RORDER**: for this reason, this constraint is 
+asserted at runtime (i.e. the program will crash if this is not true). See also
+the example [example.con](./example.con)
 
 
 ## Variables computed by master and communicated to slaves (specific to each slave)
@@ -213,8 +231,6 @@ edge, otherwise (that is, in the case of an internal edge) it is equal to zero.
     The density function discretized in position and velocity space. In order
 to implement velocity space partitioning, the second index is chosen to go from
 VNPNT_PART*MPI_RANK_V+1 to VNPNT_PART*(MPI_RANK_V+1). 
-
-
 
 ### Not fully understood stuff
 

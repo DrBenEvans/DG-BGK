@@ -1,4 +1,10 @@
 #!/usr/bin/python3
+''' 
+    Simple tool to visualize the relative and absolute difference in 
+    data from RESULTS1.RES and RESULTS2.RES.
+    Takes two directory names as arguments which must contain these two files, 
+    plus the mesh data file and the metis partition file. See visualize.py.
+'''
 import visualize as vs
 from sys import argv
 pd_df, nxy_df = vs.geom_info(argv[1])

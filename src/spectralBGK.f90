@@ -155,7 +155,6 @@
       IVD%FORCEOUT = 0
       IVD%IMMAT = 1 
       IVD%INF = 1
-      IVD%NVSPACEPART = 1
       IVD%RS = 0
       IVD%CSAFM = 0.5
       IVD%rv = 2000
@@ -172,6 +171,7 @@
       IVD%CINF(2) = 0.001473 !INFLOW PRESSURE
       IVD%CINF(3) = 171.85 !INFLOW U-VEL
       IVD%CINF(4) = 0.0   !INFLOW V-VEL
+      IVD%NVSPACEPART = 1  !NO OF VSPACE partitions
       IVD%LobattoFile = 'Lobatto20.txt' !Lobatto Quadrature File
       IVD%PSpaceFile = 'AEROFOIL.RES' !PSpace Mesh File
       IVD%OutFile = 'FILE.OUT' !Output File
@@ -198,20 +198,31 @@
       READ (10,*) RORDER 
       TORDER = IVD%TORDER
       MPI_SIZE_V = IVD%NVSPACEPART
+      ! checks on NVSPACEPART
+      IF(MOD(MPI_SIZE,MPI_SIZE_V).NE.0)THEN
+        WRITE(*,*)"Error: the number of partition in v-space is not"
+        WRITE(*,*)"       a divisor of the number of mpi ranks." 
+        WRITE(*,*)"Aborting."
+        CALL MPI_FINALIZE(MPI_IERR)
+        STOP
+      ENDIF
+      IF(MOD(RORDER,MPI_SIZE_V).NE.0)THEN
+        WRITE(*,*)"Error: the number of partition in v-space is not"
+        WRITE(*,*)"       a divisor of RORDER." 
+        WRITE(*,*)"Aborting."
+        CALL MPI_FINALIZE(MPI_IERR)
+        STOP
+      ENDIF
+
+
       MPI_SIZE_P = MPI_SIZE / MPI_SIZE_V
 ! *** CALCULATE THE NUMBER OF NODES IN VSPACE 
       VNPNT=RORDER*TORDER
       rv = IVD%rv
       FORCEOUT = IVD%FORCEOUT
 
- 
       GROUP_P = MPI_RANK / MPI_SIZE_P
       GROUP_V = MPI_RANK - GROUP_P*MPI_SIZE_P
-
-
-
-      
-     
  
       CALL MPI_COMM_SPLIT(MPI_COMM_WORLD,GROUP_P,MPI_RANK,MPI_COMM_P,&
      &               MPI_IERR)
@@ -301,7 +312,6 @@
         IF(MPI_RANK.EQ.0) WRITE(15,5)NELEM,NPOIN,NBOUN  
 ! *** SET VALUE OF MXSID 
         mxsid=2*(NELEM+NBOUN) ! (3*NELEM+NBOUN)/2 IS ENOUGH,
-                              ! YOU MUPPET
 ! 
 ! *** WRITE V-SPACE INFO TO OUTPUT FILE 
 !       
