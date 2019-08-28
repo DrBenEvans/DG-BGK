@@ -17,42 +17,13 @@
 !                   - TWO-STEP SCHEME 
 !                   - LINEAR FEM 
 !				    - GLOBAL TIMESTEPPING 
+      USE ADVNCE_MODULE, ONLY : ADVNCE
+      USE INPUT_VARIABLE_MODULE, only : INPUTVARIABLES
       IMPLICIT NONE
       INCLUDE 'mpif.h' 
 !
 ! CREATE STRUCTURE FOR INPUT VARIABLES
 !
-        TYPE InputVariables
-          INTEGER :: TORDER !Quadrature order in Theta for V-SPACE
-          INTEGER :: NTIME !Number of timesteps
-          INTEGER :: FORCEOUT !output forces at each timestep? 
-          INTEGER :: IMMAT !Lumped mass matrices (no/yes)
-          INTEGER :: RS !Using Restart data (no/yes)
-          INTEGER :: INF !Is there an inflow (no/yes)
-          INTEGER :: NVSPACEPART ! number of VSPACE partitions
-          REAL :: CSAFM !Safety factor applied to timestep (Courant)
-          REAL :: rv !Radial extent of the V-SPACE
-          REAL :: T1 !Initial condition temp
-          REAL :: P1 !Initial condition pressure
-          REAL :: U0 !Initial condition X-vel
-          REAL :: V0 !Initial condition Y-vel
-          REAL :: CINF(4)
-          REAL :: W
-          REAL :: ALPHA !WALL MOLECULAR REFLECTION PARAMETER
-          REAL :: R !GAS CONSTANT
-          REAL :: d !MOLECULAR DIAMETER
-          REAL :: M !MOLAR MASS
-          CHARACTER :: LobattoFile*80
-          CHARACTER :: PSpaceFile*80
-          CHARACTER :: OutFile*80
-          CHARACTER :: PartitionFile*80
-          CHARACTER :: RestartInFile*80
-          CHARACTER :: ResidualFile*80
-          CHARACTER :: ResultsFile1*80
-          CHARACTER :: ResultsFile2*80
-          CHARACTER :: RestartOutFile*80
-          CHARACTER :: GIDMeshFile*80
-        END TYPE
 !     DECLARE DYNAMIC ARRAYS
       INTEGER, ALLOCATABLE :: ELGRP(:,:)
       REAL, ALLOCATABLE :: MMAT(:,:)
@@ -200,24 +171,30 @@
 ! 
 ! *** PERFORM THE TIME STEP ITERATIONS 
 !
-      CALL ADVNCE(NNODE ,NGEOM ,NBNOI , NBOUN, & 
-     &        NBNOR , COORD, BSIDO, NBOUN_PP, NPOIN, NPOIN_PP ,NELEM_PP,NELEM,& 
-     &                  NTIME ,BSIDO_PP ,INTMA_PP ,& 
-     &                  FLUXP_PP ,FLUYP_PP ,& 
-     &                  GEOME_PP ,MMAT_PP  ,CMMAT_PP, RELEN ,DTE ,& 
-     &                  DELUN_PP ,& 
-     &                  RSIDO_PP ,UMEAN_PP,& 
-     &                  IMMAT ,CSAFM ,UX,UY,& 
-     &                  NSIDE_PP,ISIDE_PP,NX_PP,NY_PP,EL_PP,DISNF_PP,& 
-     &                  VNPNT,SUMWEIGHT,DISNF_PP,rv,VCORD,& 
-     &                  RHO_PP,UVEL_PP,VVEL_PP,PS_PP,TEMP_PP,& 
-     &                  ALPHA,CINF,LCOMM_PP,GCOMM,NPGRP,IPCOM_PP,& 
-     &      ISCOM_PP,MXCOM_PP,NCOMM_PP,maxNELEM_PP,RORDER,TORDER,maxNPOIN_PP,&
-     &          SDCOM_PP,IVD,FORCEOUT,d,R,M,&
-     &                     MPI_RANK_P,MPI_SIZE_P,MPI_COMM_P,&
-     &                     MPI_RANK_V,MPI_SIZE_V,MPI_COMM_V,&
-     &                     VSPACE_FIRST,VSPACE_LAST)
-! 
+      CALL ADVNCE(NNODE=NNODE,NGEOM=NGEOM,NBNOI=NBNOI,&
+       &NBOUN=NBOUN,NBNOR=NBNOR,COORD=COORD,&
+       &BSIDO=BSIDO,NBOUN_PP=NBOUN_PP,NPOIN=NPOIN,&
+       &NPOIN_PP=NPOIN_PP,NELEM_PP=NELEM_PP,NELEM=NELEM,&
+       &NTIME=NTIME,BSIDO_PP=BSIDO_PP,INTMA_PP=INTMA_PP,&
+       &FLUXP_PP=FLUXP_PP,FLUYP_PP=FLUYP_PP,GEOME_PP=GEOME_PP,&
+       &MMAT_PP=MMAT_PP,CMMAT_PP=CMMAT_PP,RELEN=RELEN,&
+       &DTE=DTE,DELUN_PP=DELUN_PP,RSIDO_PP=RSIDO_PP,&
+       &UMEAN_PP=UMEAN_PP,IMMAT=IMMAT,CSAFM=CSAFM,&
+       &UX=UX,UY=UY,NSIDE_PP=NSIDE_PP,&
+       &ISIDE_PP=ISIDE_PP,NX_PP=NX_PP,NY_PP=NY_PP,&
+       &EL_PP=EL_PP,DISNF_PP=DISNF_PP,VNPNT=VNPNT,&
+       &SUMWEIGHT=SUMWEIGHT,rv=rv, VCORD=VCORD,&
+       &RHO_PP=RHO_PP,UVEL_PP=UVEL_PP, VVEL_PP=VVEL_PP,&
+       &PS_PP=PS_PP,TEMP_PP=TEMP_PP, ALPHA=ALPHA,&
+       &CINF=CINF,LCOMM_PP=LCOMM_PP, GCOMM=GCOMM,&
+       &IPCOM_PP=IPCOM_PP, ISCOM_PP=ISCOM_PP, NCOMM_PP=NCOMM_PP,&
+       &maxNELEM_PP=maxNELEM_PP, RORDER=RORDER, TORDER=TORDER,&
+       &maxNPOIN_PP=maxNPOIN_PP, SDCOM_PP=SDCOM_PP, IVD=IVD,&
+       &FORCEOUT=FORCEOUT, d=d, RGas=R,&
+       &M=M, MPI_RANK_P=MPI_RANK_P, MPI_SIZE_P=MPI_SIZE_P,&
+       &MPI_COMM_P=MPI_COMM_P, MPI_RANK_V=MPI_RANK_V, MPI_SIZE_V=MPI_SIZE_V,&
+       &MPI_COMM_V=MPI_COMM_V, VSPACE_FIRST=VSPACE_FIRST, VSPACE_LAST=VSPACE_LAST) 
+
 ! *** OUTPUT FOR GID AND RESTART FILE 
 ! 
       OUTPUT_TIMING = MPI_WTIME()

@@ -1,6 +1,9 @@
 rm *.o
-mpif90 -fc=ifort -heap-arrays -check -c *.f90 
-mpif90 -fc=ifort -heap-arrays -check -o BGK  *.o
+mpif90  -O3 -g -Wall -c *.f90 
+mpif90  -O3 -o BGK  *.o
+
+#mpif90 -fc=ifort -heap-arrays -check -c *.f90 
+#mpif90 -fc=ifort -heap-arrays -check -o BGK  *.o
 
 #mpif90 -fc=ifort -heap-arrays -O2 -c *.f90 
 #mpif90 -fc=ifort -heap-arrays -O2 -o BGK  *.o

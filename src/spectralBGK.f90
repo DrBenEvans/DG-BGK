@@ -139,12 +139,8 @@
 ! 
 ! *** OPEN THE CONFIGURATION FILE (filename stored in INPUT FILE) 
 ! 
-      filename='run.inp' 
-! 
-      OPEN(21,file=filename,status='old')
-      READ(21,*) filename 
-      CLOSE(21)
-!
+!     
+      CALL GET_COMMAND_ARGUMENT(1,filename)
       IF(MPI_RANK.EQ.0) PRINT*,'CONFIGURATION FILE = ',filename 
       OPEN (13,file=filename,status='old') 
 !
@@ -187,11 +183,11 @@
 ! 
 ! *** OPEN THE LOBATTO WEIGHTINGS FILES 
 ! *** FIRST FOR FULL VMESH INTEGRATION
-      filename = IVD%LobattoFile
+      
       IF(MPI_RANK.EQ.0) THEN
         PRINT*,'READING V-SPACE LOBATTO FILE = ',IVD%LobattoFile
       ENDIF
-      OPEN (10, file=filename, status='old') 
+      OPEN (10, file=IVD%LobattoFile, status='old') 
 ! 
 ! *** READ IN THE LOBATTO ORDER 
 !	 
@@ -250,18 +246,18 @@
 ! 
 ! *** OPEN THE INPUT FILE ON CHANNEL5 
 ! 
-        filename = IVD%PSpaceFile
+        
         PRINT*,'RANK',MPI_RANK,'READING P-SPACE MESH FILE = ',&
      &                         IVD%PSpaceFile 
-        OPEN  (14, file=filename, status='old')  
+        OPEN  (14, file=IVD%PSpaceFile, status='old')  
         WRITE(*,*) 
 
         WRITE(*,*) 
-        filename = IVD%OutFile
+        
 
         IF(MPI_RANK.EQ.0) THEN
           PRINT*,'OPENDING OUTPUT FILE = ',IVD%OutFile
-          OPEN  (15, file=filename, status='UNKNOWN')    
+          OPEN  (15, file=IVD%OutFile, status='UNKNOWN')    
         ENDIF
 
         WRITE(*,*) 
