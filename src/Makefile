@@ -5,20 +5,43 @@ all = BGK
 #FFLAGS= -fc=ifort -heap-arrays -O2
 FFLAGS= -g -Wall 
 
-OBJ = ADDVEC.o ADTHEM.o ADVNCE.o  ALOTIM2.o ALOTIM.o BCASTP.o  BCASTV.o CMMINC.o COMPMU.o  CONMAT.o DG_lin_convec.o EDGCOM.o  EDGFLXOPT.o ELNODE.o FLUCON2.o  GETAVR.o GETBOU.o GETELC.o  GETFLA.o GETFLU.o GETFOR.o  GETGEO.o GETINC.o GETINF.o  GETLEN.o GETLOC.o GETMAC.o  GETMAT.o GETNOR.o GETRES.o  GETRHO.o GETROW.o GETSID.o  GTEQNF.o GTINPT.o IDENTA.o  IDENTM.o IFILLA.o IFILLM.o  IFILLV.o INFLOW.o INICON2.o  INICON.o MACROS.o normal.o  OUTPUT.o PTMESH.o RFILLA.o  RFILLM.o RFILLV.o spectralBGK.o  VSPACE.o INPUT_VARIABLE_MODULE.f90
-
-
-ADVNCE.o : ADVNCE.f90 INPUT_VARIABLE_MODULE.mod
-	mpif90 $(FFLAGS) -c $<
-
-%.mod : %.f90
-	mpif90 $(FFLAGS) -c $<
-
-%.o : %.f90 
-	mpif90 $(FFLAGS) -c $<
+OBJ = addvec.o adthem.o advnce.o alotim2.o alotim.o bcastp.o \
+      bcastv.o cmminc.o compmu.o conmat.o dg_lin_convec.o edgcom.o \
+      edgflxopt.o elnode.o flucon2.o getavr.o getbou.o getelc.o \
+      getfla.o getflu.o getfor.o getgeo.o getinc.o getinf.o \
+      getlen.o getloc.o getmac.o getmat.o getnor.o getres.o \
+      getrho.o getrow.o getsid.o gteqnf.o gtinpt.o identa.o \
+      identm.o ifilla.o ifillm.o ifillv.o inflow.o inicon2.o \
+      inicon.o macros.o normal.o output.o ptmesh.o rfilla.o \
+      rfillm.o rfillv.o spectralbgk.o vspace.o input_variable_module.o
 
 BGK : $(OBJ)
 	mpif90 $(FFLAGS) -o $@ $^
+
+advnce.o : advnce.f90 input_variable_module.mod
+	mpif90 $(FFLAGS) -c $<
+
+ouptut.o : output.f90 input_variable_module.mod
+	mpif90 $(FFLAGS) -c $<
+
+ptmesh.o : ptmesh.f90 input_variable_module.mod getloc_module.mod
+	mpif90 $(FFLAGS) -c $<
+
+spectralbgk.o : spectralbgk.f90 dg_lin_convec_module.mod  \
+	            input_variable_module.mod
+
+advnce_module.mod : advnce.o
+
+output_module.mod : output.o
+
+dg_lin_convec.o : dg_lin_convec.f90 advnce_module.mod output_module.mod \
+	                 ptmesh_module.mod
+	mpif90 $(FFLAGS) -c $<
+
+%.mod : %.o
+
+%.o : %.f90 
+	mpif90 $(FFLAGS) -c $<
 
 clean:
 	rm -rf BGK $(OBJ)

@@ -1,0 +1,8 @@
+SUBROUTINE RFILLV(A, NA, C)
+  INTEGER NA
+  REAL A(NA), C
+  DO I = 1, NA
+    A(I) = C
+  ENDDO
+  RETURN
+END
