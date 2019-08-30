@@ -1,24 +1,24 @@
 MODULE EDGFLXOPT_MODULE
 CONTAINS
-  SUBROUTINE EDGFLXOPT(NELEM, NSIDE_PP,&
-      ISIDE, RHS,&
-      NX, NY,&
-      EL, UX,&
-      UY, RSIDO,&
-      BSIDO, NBOUN,&
-      NBNOR, ALPHA,&
-      ETA, VNPNT,&
-      IV, DISNF,&
-      UMEAN,  rv,&
-      NGRPS,  MPI_RANK_P,&
-      NCOMM_PP,  VCORD,&
-      RORDER,  TORDER,&
-      SDCOM_PP,  R,&
-      MPI_COMM_P, VSPACE_FIRST,&
-      VSPACE_LAST, SENDRECV_TOT_LENGTH_MAX,&
-      SENDRECV_START_OFFSETS, SEND_EDGE_DATA,&
-      RECV_EDGE_DATA, SEND_EDGE_DATA_IDX,&
-      RECV_EDGE_DATA_IDX) 
+  SUBROUTINE EDGFLXOPT(NELEM, NSIDE_PP, &
+                       ISIDE, RHS, &
+                       NX, NY, &
+                       EL, UX, &
+                       UY, RSIDO, &
+                       BSIDO, NBOUN, &
+                       NBNOR, ALPHA, &
+                       ETA, VNPNT, &
+                       IV, DISNF, &
+                       UMEAN, rv, &
+                       NGRPS, MPI_RANK_P, &
+                       NCOMM_PP, VCORD, &
+                       RORDER, TORDER, &
+                       SDCOM_PP, R, &
+                       MPI_COMM_P, VSPACE_FIRST, &
+                       VSPACE_LAST, SENDRECV_TOT_LENGTH_MAX, &
+                       SENDRECV_START_OFFSETS, SEND_EDGE_DATA, &
+                       RECV_EDGE_DATA, SEND_EDGE_DATA_IDX, &
+                       RECV_EDGE_DATA_IDX)
 !
 ! *** SUBROUTINE TO CALCULATE THE FLUXES TRANSFERRED BETWEEN ELEMENTS AT EDGES
 !
@@ -81,16 +81,16 @@ CONTAINS
       SCPR = UX*NX(IS) + UY*NY(IS)
 ! ***   SKIP TO SEPARATE SUBROUTINE FOR BOUNDARY EDGES
       IF (IER .EQ. 0) THEN  ! dlkfsdaklfasklda
-        CALL GETBOU(NBOUN = NBOUN, NBNOR = NBNOR, NELEM_PP = NELEM,&
-          BSIDO = BSIDO, IEL = IEL, RSIDO = RSIDO,&
-          IP1 = IP1,          RHS = RHS, IN1 = INL1,&
-          IN2 = INL2, UX = UX, UY = UY,&
-          ALPHA = ALPHA, ETA = ETA, VNPNT = VNPNT,&
-          IV = IV, DISNF = DISNF, UMEAN = UMEAN,&
-          rv = rv, &
-          VCORD = VCORD, RORDER = RORDER, TORDER = TORDER          ,&
-          R = R, VSPACE_FIRST = VSPACE_FIRST,&
-          VSPACE_LAST = VSPACE_LAST)
+        CALL GETBOU(NBOUN=NBOUN, NBNOR=NBNOR, NELEM_PP=NELEM, &
+                    BSIDO=BSIDO, IEL=IEL, RSIDO=RSIDO, &
+                    IP1=IP1, RHS=RHS, IN1=INL1, &
+                    IN2=INL2, UX=UX, UY=UY, &
+                    ALPHA=ALPHA, ETA=ETA, VNPNT=VNPNT, &
+                    IV=IV, DISNF=DISNF, UMEAN=UMEAN, &
+                    rv=rv, &
+                    VCORD=VCORD, RORDER=RORDER, TORDER=TORDER, &
+                    R=R, VSPACE_FIRST=VSPACE_FIRST, &
+                    VSPACE_LAST=VSPACE_LAST)
 
       ELSEIF ((IER .NE. -1) .AND. (IEL .NE. -1)) THEN !dlkfsdaklfasklda
 ! ***     FOR INTERNAL SIDES:
@@ -230,6 +230,9 @@ CONTAINS
           FLAG = 1
         ELSE
           WRITE (*, *) "THIS SHOULD NOT HAPPEN."
+          IELR = -1
+          INLR1 = -1
+          INLR2 = -1
         ENDIF
 
         RHSI(1) = RECV_EDGE_DATA(2*OFFSET + 1)

@@ -68,6 +68,9 @@ CONTAINS
             GOTO 159
           ENDIF
           THETA1 = -ATAN(ABS(ANY/ANX)) - (PI/2)
+        ELSE
+          WRITE(*,*) "THIS SHOULD NOT HAPPEN"
+          THETA1 = 0.0
         ENDIF
 159     CONTINUE
 !
@@ -78,6 +81,8 @@ CONTAINS
 !
 ! ***     FIND BOUNDARY SIDE EDGE IN ISIDE_PP TO GET LOCAL NODE NUMBERS
 !
+        IN1 = -1
+        IN2 = -1
         DO IS = 1, NSIDE_PP !dkljsdfaadfda
           IP1T = ISIDE_PP(1, IS)
           IP2T = ISIDE_PP(2, IS)
