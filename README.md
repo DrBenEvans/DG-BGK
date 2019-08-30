@@ -1,12 +1,10 @@
 
 This is a repository for the development and optimisation 
-of Ben Evans\' DG_-Boltzmann  BGK solver.
+of Ben Evans\' DG-BGK solver for the Boltzmann Equation.
 
 A possible reference: [A discontinuous finite element solution of the Boltzmann kinetic
 equation in collisionless and BGK forms for macroscopic gas flows](http://www.sciencedirect.com/science/article/pii/S0307904X10002763?via%3Dihub)
 
-
-Documentation for this project is practically absent.
 Some notes are in the **doc** directory, [here](./doc/README.md).
 
 Some Rough Stats for this code:
