@@ -436,7 +436,7 @@ contains
 ! *** WRITE TO MAX RESIDUAL FILE
 !
       IF (MPI_RANK_P .EQ. 0) THEN
-        SUMRES = MAXVAL(RESIDUAL)
+        SUMRES = MAXVAL(ABS(RESIDUAL))
         CALL MPI_REDUCE(SUMRES, SUMRESG, 1, MPI_REAL, MPI_MAX,&
    &                             0, MPI_COMM_V, MPI_IERR)
         IF (MPI_RANK_V .EQ. 0) THEN
