@@ -89,9 +89,6 @@ contains
     ! mpi-stuff for velocity space partitioning
     INTEGER MPI_RANK_V, MPI_COMM_V
 
-    CHARACTER(len=80) :: filename
-!      CHARACTER dbgfilename*80 !TESTING-DEBUG
-!
     TYPE(InputVariables) :: IVD
 !
     PARAMETER(PI=3.1416)
@@ -104,22 +101,21 @@ contains
 ! *** OPEN CHANNEL 16 TO WRITE TO THE RESIDUAL FILE
 !
     IF ((MPI_RANK_P .EQ. 0) .AND. (MPI_RANK_V .EQ. 0)) THEN ! write only on master rank
-      filename = IVD%ResidualFile
+
 !
       PRINT *, 'OPENING RESIDUAL FILE = ', IVD%ResidualFile
-      OPEN (16, file=filename, status='UNKNOWN')
+      OPEN (16, file=IVD%ResidualFile, status='UNKNOWN')
       WRITE (*, *)
 !
 ! ***   SET UP CHANNEL 17 & 18 TO WRITE TO RESULTS FILES FOR GiD POST PROCESSING
 !
-      filename = IVD%ResultsFile1
       PRINT *, 'OPENING 1st RESULTS FILE = ', IVD%ResultsFile1
-      OPEN (17, file=filename, status='UNKNOWN')
+      OPEN (17, file=IVD%ResultsFile1, status='UNKNOWN')
       WRITE (*, *)
       WRITE (*, *)
-      filename = IVD%ResultsFile2
+
       PRINT *, 'OPENING 2nd RESULTS FILE = ', IVD%ResultsFile2
-      OPEN (18, file=filename, status='UNKNOWN')
+      OPEN (18, file=IVD%ResultsFile2, status='UNKNOWN')
       WRITE (*, *)
     ENDIF !dskljdasda
     CALL MPI_BARRIER(MPI_COMM_WORLD, MPI_IERR)
