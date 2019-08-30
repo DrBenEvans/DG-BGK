@@ -439,9 +439,9 @@ contains
         SUMRES = MAXVAL(RESIDUAL)
         CALL MPI_REDUCE(SUMRES, SUMRESG, 1, MPI_REAL, MPI_MAX,&
    &                             0, MPI_COMM_V, MPI_IERR)
-        SUMRES = SUMRESG
-        if (ITIME .EQ. 1) SRITM1 = SUMRES
         IF (MPI_RANK_V .EQ. 0) THEN
+          SUMRES = SUMRESG
+          if (ITIME .EQ. 1) SRITM1 = SUMRES
           IF (IVD%FORCEOUT .EQ. 0) THEN     !IF NOT OUTPUTTING FORCES
             WRITE (16, *) ITIME, LOG(SUMRES/SRITM1)
           ELSE             !IF OUTPUTTING FORCES IN RESIDUAL FILE
