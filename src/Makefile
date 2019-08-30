@@ -3,7 +3,8 @@ all = BGK
 #FFLAGS= -fc=ifort -heap-arrays -g -traceback -check all 
 #FFLAGS= -fc=ifort -heap-arrays -check all 
 #FFLAGS= -fc=ifort -heap-arrays -O2
-FFLAGS= -g -Wall 
+#FFLAGS= -g -Wall -O#
+FFLAGS= -Wall -O2 -mavx2
 
 # getavr.o was excluded since GETAVR is not referenced anywhere in
 # the code
