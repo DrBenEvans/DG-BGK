@@ -15,5 +15,5 @@ cd /home/s.engevabj/Boltzmann_cases/test_case3/
 module load hpcw
 module load intel-license
 module load mpi/intel/2018/4
-mpirun /home/s.engevabj/codes/BGKcode2018/BGK < run.inp >& output
+mpirun /home/s.engevabj/codes/BGKcode2018/BGK Nanoparticle.con &> output
 
