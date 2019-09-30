@@ -1,7 +1,8 @@
-all = BGK
+all : BGK
 
 #FFLAGS= -fc=ifort -heap-arrays -g -traceback -check all 
-#FFLAGS= -fc=ifort -heap-arrays -check all 
+#FFLAGS= -fc=ifort -heap-arrays -check all  
+#FFLAGS= -fc=ifort -heap-arrays -warn all  
 #FFLAGS= -fc=ifort -heap-arrays -O2
 #FFLAGS= -g -Wall -O#
 FFLAGS= -Wall -O3 -mavx2

@@ -16,5 +16,5 @@ module load hpcw
 module load intel-license
 module load mpi/intel/2017/4
 module load compiler/intel/2018/3
-mpirun /home/s.engevabj/codes/BGKcode2018/BGK < run.inp >& output
+mpirun /home/s.engevabj/codes/BGKcode2018/BGK  reentry_3.con &> output
 
