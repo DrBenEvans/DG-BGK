@@ -10,7 +10,6 @@
 ###
 #now run normal batch commands 
 module purge
-module load intel-license
-module load mpi/intel/2017/4
-module load compiler/intel/2017/4
+module load intel
+module load mvapich2/2.2rc2
 mpirun ./BGK reentry_test.con &> output

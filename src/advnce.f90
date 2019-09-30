@@ -399,37 +399,20 @@ contains
                   MPI_COMM_V=MPI_COMM_V, VSPACE_FIRST=VSPACE_FIRST, &
                   VSPACE_LAST=VSPACE_LAST)
 
-      IF (FORCEOUT .EQ. 0) THEN !NOT WRITING OUT FORCES TO RESIDUAL FILE
 ! *** CONSTRUCT GLOBAL MACRO VECTORS
-        IF (MOD(ITIME, 1000) .EQ. 0) THEN
-          CALL GETMAC(maxNPOIN_PP, NPOIN_PP, IPCOM_PP, ND_PP, RHO_PP,&
-   &        UVEL_PP, VVEL_PP, PS_PP, TEMP_PP, NPOIN, ND, RHO, UVEL, VVEL,&
-   &        PS, TEMP, NGRPS, MPI_RANK_P, MPI_COMM_P)
-! ***       WRITE OUTPUT DATA TO RESULTS FILE
-          IF ((MPI_RANK_P .EQ. 0) .AND. (MPI_RANK_V .EQ. 0)) THEN
+      IF (MOD(ITIME, 1000) .EQ. 0) THEN
+        CALL GETMAC(maxNPOIN_PP, NPOIN_PP, IPCOM_PP, ND_PP, RHO_PP,&
+   &      UVEL_PP, VVEL_PP, PS_PP, TEMP_PP, NPOIN, ND, RHO, UVEL, VVEL,&
+   &      PS, TEMP, NGRPS, MPI_RANK_P, MPI_COMM_P)
+! ***     WRITE OUTPUT DATA TO RESULTS FILE
+        IF ((MPI_RANK_P .EQ. 0) .AND. (MPI_RANK_V .EQ. 0)) THEN
 ! ***         CONSTRUCT GLOBAL MACRO VARIABLE VECTORS
-            WRITE (17, 500) ITIME
-            WRITE (18, 500) ITIME
-            DO IP = 1, NPOIN
-              WRITE (17, 600) IP, ND(IP), UVEL(IP), VVEL(IP)
-              WRITE (18, 600) IP, RHO(IP), PS(IP), TEMP(IP)
-            ENDDO
-          ENDIF
-        ENDIF
-      ELSE  !WRITING OUT FORCES TO RESIDUAL FILE
-! ***     CONSTRUCT GLOBAL MACRO VECTORS
-        IF (MOD(ITIME, FORCEOUT) .EQ. 0) THEN
-          CALL GETMAC(maxNPOIN_PP, NPOIN_PP, IPCOM_PP, ND_PP, RHO_PP,&
-   &          UVEL_PP, VVEL_PP, PS_PP, TEMP_PP, NPOIN, ND, RHO, UVEL, VVEL,&
-   &          PS, TEMP, NGRPS, MPI_RANK_P, MPI_COMM_P)
-          IF ((MPI_RANK_P .EQ. 0) .AND. (MPI_RANK_V .EQ. 0)) THEN
-            WRITE (17, 500) ITIME
-            WRITE (18, 500) ITIME
-            DO IP = 1, NPOIN
-              WRITE (17, 600) IP, ND(IP), UVEL(IP), VVEL(IP)
-              WRITE (18, 600) IP, RHO(IP), PS(IP), TEMP(IP)
-            ENDDO
-          ENDIF
+          WRITE (17, 500) ITIME
+          WRITE (18, 500) ITIME
+          DO IP = 1, NPOIN
+            WRITE (17, 600) IP, ND(IP), UVEL(IP), VVEL(IP)
+            WRITE (18, 600) IP, RHO(IP), PS(IP), TEMP(IP)
+          ENDDO
         ENDIF
       ENDIF
 !
