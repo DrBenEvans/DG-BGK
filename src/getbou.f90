@@ -189,7 +189,7 @@ CONTAINS
       ELSEIF (TEST .LE. 0.0) THEN
         SPEED = SQRT(UX*UX + UY*UY)
         Mw = EXP(-(SPEED*SPEED)/(2*R*REAL(TEMP)))
-        Mf = Mw*ETA(ISB)
+        Mf = Mw*ETA(ISB) 
 !
 ! *** EVALUATE THE REFLECTED nf
 !
@@ -211,6 +211,10 @@ CONTAINS
         ETAref = ((2*RT)/RV) - 1
         IF (ETAref .GT. 1.0) ETAref = 1.0
         ZETAref = THETA/PI
+ !       OPEN (99, file='PLOT.txt',status='UNKNOWN')
+ !       IF((ANX.EQ.0.0).AND.(ANY.EQ.-1.0))THEN
+ !       WRITE(99,400) CXR,CYR,THETA,ETAref,ZETAref
+ !       ENDIF
 !
 ! *** INTERPOLATE THE nf VALUE AT THIS NEW REFLECTED COORDINATE
 !
@@ -277,6 +281,8 @@ CONTAINS
       ENDIF
 !
     ENDIF
+!
+ 400 FORMAT(F12.5,F12.5,F10.5,F10.5,F10.5)
 !
     RETURN
   END

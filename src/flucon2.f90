@@ -52,32 +52,58 @@ CONTAINS
       IF (ITYPE .EQ. 4) THEN !fgsdfgskjfgkljsfglkjsdfg
         ANX = RSIDO_PP(1, IB)
         ANY = RSIDO_PP(2, IB)
-        IF ((ANX .GT. 0) .AND. (ANY .GE. 0)) THEN
-          THETA1 = ATAN(ANY/ANX) - (PI/2)
-        ELSEIF ((ANX .LE. 0) .AND. (ANY .GT. 0)) THEN
-          IF (ANX .EQ. 0.0) THEN
-            THETA1 = PI/2
-            GOTO 159
-          ENDIF
-          THETA1 = (PI/2) - ATAN(ABS(ANY/ANX))
-        ELSEIF ((ANX .LT. 0) .AND. (ANY .LE. 0)) THEN
-          THETA1 = ATAN(ABS(ANY/ANX)) + (PI/2)
-        ELSEIF ((ANX .GE. 0) .AND. (ANY .LT. 0)) THEN
-          IF (ANX .EQ. 0) THEN
-            THETA1 = -PI/2
-            GOTO 159
-          ENDIF
-          THETA1 = -ATAN(ABS(ANY/ANX)) - (PI/2)
-        ELSE
-          WRITE(*,*) "THIS SHOULD NOT HAPPEN"
-          THETA1 = 0.0
-        ENDIF
-159     CONTINUE
+!        IF ((ANX .GT. 0) .AND. (ANY .GE. 0)) THEN
+!          THETA1 = ATAN(ANY/ANX) - (PI/2)
+!        ELSEIF ((ANX .LE. 0) .AND. (ANY .GT. 0)) THEN
+!          IF (ANX .EQ. 0.0) THEN
+!            THETA1 = PI/2
+!            GOTO 159
+!          ENDIF
+!          THETA1 = (PI/2) - ATAN(ABS(ANY/ANX))
+!        ELSEIF ((ANX .LT. 0) .AND. (ANY .LE. 0)) THEN
+!          THETA1 = ATAN(ABS(ANY/ANX)) + (PI/2)
+!        ELSEIF ((ANX .GE. 0) .AND. (ANY .LT. 0)) THEN
+!          IF (ANX .EQ. 0) THEN
+!            THETA1 = -PI/2
+!            GOTO 159
+!          ENDIF
+!          THETA1 = -ATAN(ABS(ANY/ANX)) - (PI/2)
+!        ELSE
+!          WRITE(*,*) "THIS SHOULD NOT HAPPEN"
+!          THETA1 = 0.0
+!        ENDIF
+!       IF((ANX.GT.0.0).AND.(ANY.GT.0.0))THEN
+!         THETA1 = ATAN(ANY/ANX) - (PI/2)
+!         THETA2 = THETA1+PI/2
+!       ELSEIF((ANX.LT.0.0).AND.(ANY.GT.0.0))THEN
+!         THETA1 = -PI/2-ATAN(-ANY/ANX)
+!         THETA2 = THETA1+PI
+!       ELSEIF((ANX.GT.0.0).AND.(ANY.LT.0.0))THEN
+!         THETA1 = -PI+ATAN(-ANY/ANX)
+!         THETA2 = THETA1+PI
+!       ELSEIF((ANX.LT.0.0).AND.(ANY.LT.0.0))THEN
+!         THETA1 = -ATAN(ANY/ANX)
+!         THETA2 = THETA2+PI
+!       ELSEIF((ANX.EQ.1.0).AND.(ANY.EQ.0.0))THEN
+!         THETA1 = -PI/2
+!         THETA2 = PI/2
+!       ELSEIF((ANX.EQ.0.0).AND.(ANY.EQ.1.0))THEN
+!         THETA1=0.0
+!         THETA2=PI
+!       ELSEIF((ANX.EQ.-1.0).AND.(ANY.EQ.0.0))THEN
+!         THETA1=-PI/2
+!         THETA2=PI
+!       ELSEIF((ANX.EQ.0.0).AND.(ANY.EQ.-1.0))THEN
+!         THETA1=-PI
+!         THETA2=0.0
+!       ENDIF        
+!159     CONTINUE
 !
 ! ***     COMPUTE THETA2
 !
-        THETA2 = THETA1 + PI        !WE WILL THEN INTEGRATE BETWEEN THESE TWO ANGLES
-        IF (THETA2 .GT. (PI + 0.01)) THETA2 = THETA2 - 2*PI
+!        THETA2 = THETA1 + PI        !WE WILL THEN INTEGRATE BETWEEN THESE TWO ANGLES
+!        IF (THETA2 .GT. (PI + 0.01)) THETA2 = THETA2 - 2*PI
+!        PRINT*,'ANX=',ANX,'ANY=',ANY,'THETA1=',THETA1,'THETA2=',THETA2
 !
 ! ***     FIND BOUNDARY SIDE EDGE IN ISIDE_PP TO GET LOCAL NODE NUMBERS
 !
@@ -110,44 +136,73 @@ CONTAINS
           ZETA1 = VCORD(2, IV)
           RT = ETA1*(rv/2) + (rv/2)       !MAP BACK TO POLAR COORDINATES
           THETA = ZETA1*PI
-          IF (ANX .GE. 0) THEN
-            IF ((THETA .GE. THETA1) .AND. (THETA .LE. THETA2)) THEN
+!          IF (ANX .GT. 0.0) THEN
+!            IF ((THETA .GE. THETA1) .AND. (THETA .LE. THETA2)) THEN
               CX = RT*COS(THETA)            !CONVERT TO CARTESIANS
               CY = RT*SIN(THETA)
+!
+! ***         IS THE FLUX INTO OR AWAY FROM THE WALL?
+! ***         update method (june 2020) - abandoned use of angles and now just
+! test the scalar produce of molec velocity and wall normal
+!
+              TEST = CX*ANX + CY*ANY
+              VNORM = ABS(TEST)
+              JAC = PI*rv*rv*0.25*(ETA1 + 1)
+              WEIGHT = VCORD(3, IV)
+              nf1 = DISNF_PP(IN1, IV, IEL)
+              nf2 = DISNF_PP(IN2, IV, IEL)
+              nf = 0.5*(nf1 + nf2)
+!
+            IF(TEST.GT.0.0)THEN
+              SUMTOP_ARR(IB) = SUMTOP_ARR(IB) + VNORM*nf*JAC*WEIGHT*FRAC
+            ENDIF
+!          ELSEIF (ANX.LT.0.0)THEN
+!            IF((THETA.LT.THETA1).OR.(THETA.GT.THETA2))THEN
+!              CX = RT*COS(THETA)            !CONVERT TO CARTESIANS
+!              CY = RT*SIN(THETA)
 !
 ! ***           IS THE FLUX INTO OR AWAY FROM THE WALL?
 !
-              TEST = CX*ANX + CY*ANY
-              VNORM = ABS(TEST)
-              JAC = PI*rv*rv*0.25*(ETA1 + 1)
-              WEIGHT = VCORD(3, IV)
-              nf1 = DISNF_PP(IN1, IV, IEL)
-              nf2 = DISNF_PP(IN2, IV, IEL)
-              nf = 0.5*(nf1 + nf2)
+!              TEST = CX*ANX + CY*ANY
+!              VNORM = ABS(TEST)
+!              JAC = PI*rv*rv*0.25*(ETA1 + 1)
+!              WEIGHT = VCORD(3, IV)
+!              nf1 = DISNF_PP(IN1, IV, IEL)
+!              nf2 = DISNF_PP(IN2, IV, IEL)
+!              nf = 0.5*(nf1 + nf2)
+!            ENDIF
+!          ELSEIF(ANX.EQ.0.0)THEN
+!            IF ((THETA .GE. THETA1) .AND. (THETA .LE. THETA2)) THEN
+!              CX = RT*COS(THETA)            !CONVERT TO CARTESIANS
+!              CY = RT*SIN(THETA)
 !
-              SUMTOP_ARR(IB) = SUMTOP_ARR(IB) + VNORM*nf*JAC*WEIGHT*FRAC
-            ELSE
-              CONTINUE
-            ENDIF
-          ELSEIF (ANX .LE. 0) THEN
-            IF ((THETA .GE. THETA1) .OR. (THETA .LE. THETA2)) THEN
-              CX = RT*COS(THETA)            !CONVERT TO CARTESIANS
-              CY = RT*SIN(THETA)
+! ***           IS THE FLUX INTO OR AWAY FROM THE WALL?
+!
+!              TEST = CX*ANX + CY*ANY
+!              VNORM = ABS(TEST)
+!              JAC = PI*rv*rv*0.25*(ETA1 + 1)
+!              WEIGHT = VCORD(3, IV)
+!              nf1 = DISNF_PP(IN1, IV, IEL)
+!              nf2 = DISNF_PP(IN2, IV, IEL)
+!              nf = 0.5*(nf1 + nf2)
+!            ENDIF
+!          ELSEIF (ANX .LE. 0) THEN
+!            IF ((THETA .LT. THETA1) .OR. (THETA .GT. THETA2)) THEN
+!              CX = RT*COS(THETA)            !CONVERT TO CARTESIANS
+!              CY = RT*SIN(THETA)
 !
 !   ***         IS THE FLUX INTO OR AWAY FROM THE WALL?
 !
-              TEST = CX*ANX + CY*ANY
-              VNORM = ABS(TEST)
-              JAC = PI*rv*rv*0.25*(ETA1 + 1)
-              WEIGHT = VCORD(3, IV)
-              nf1 = DISNF_PP(IN1, IV, IEL)
-              nf2 = DISNF_PP(IN2, IV, IEL)
-              nf = 0.5*(nf1 + nf2)
-              SUMTOP_ARR(IB) = SUMTOP_ARR(IB) + VNORM*nf*JAC*WEIGHT*FRAC
-            ELSE
-              CONTINUE
-            ENDIF
-          ENDIF
+!              TEST = CX*ANX + CY*ANY
+!              VNORM = ABS(TEST)
+!              JAC = PI*rv*rv*0.25*(ETA1 + 1)
+!              WEIGHT = VCORD(3, IV)
+!              nf1 = DISNF_PP(IN1, IV, IEL)
+!              nf2 = DISNF_PP(IN2, IV, IEL)
+!              nf = 0.5*(nf1 + nf2)
+!              SUMTOP_ARR(IB) = SUMTOP_ARR(IB) + VNORM*nf*JAC*WEIGHT*FRAC
+!            ENDIF
+!          ENDIF
 
 ! ***       END THE LOOP OVER VELOCITY SPACE
         ENDDO ! DO IV=VSPACE_FIRST,VSPACE_LAST !fdfgdvsdvjkkljnffgddd
